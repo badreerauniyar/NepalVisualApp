@@ -2,7 +2,6 @@ import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QueryParamService } from '../../../../services/query-param.service';
-import { MapboxService, ProvinceSelection } from '../../../../services/mapbox.service';
 import * as nepalData from '../../../../../assets/constants/nepal-data.json';
 
 
@@ -69,8 +68,10 @@ export class LeftSidebar implements OnInit {
   municipalities: Municipality[] = [];
   wards: Ward[] = [];
 
-  // Mapbox service data - only for display when province is selected
-  selectedMapboxProvince: ProvinceSelection | null = null;
+  // Current selection data for display
+  currentProvinceData: any = null;
+  currentDistrictData: any = null;
+  currentMunicipalityData: any = null;
 
   // Stats (mock data)
   totalSchools = '2,847';
@@ -78,8 +79,7 @@ export class LeftSidebar implements OnInit {
   selectedArea = '147,181';
 
   constructor(
-    private queryParamService: QueryParamService,
-    private mapboxService: MapboxService
+    private queryParamService: QueryParamService
   ) {
     // Data will be loaded from constants files based on selected country
   }
@@ -93,18 +93,21 @@ export class LeftSidebar implements OnInit {
 
     this.queryParamService.province$.subscribe(province => {
       this.selectedProvince = province;
+      this.loadCurrentProvinceData();
       this.loadDistrictsForProvince();
       this.emitFilterChange();
     });
 
     this.queryParamService.district$.subscribe(district => {
       this.selectedDistrict = district;
+      this.loadCurrentDistrictData();
       this.loadMunicipalitiesForDistrict();
       this.emitFilterChange();
     });
 
     this.queryParamService.municipality$.subscribe(municipality => {
       this.selectedMunicipality = municipality;
+      this.loadCurrentMunicipalityData();
       this.loadWardsForMunicipality();
       this.emitFilterChange();
     });
@@ -112,11 +115,6 @@ export class LeftSidebar implements OnInit {
     this.queryParamService.ward$.subscribe(ward => {
       this.selectedWard = ward;
       this.emitFilterChange();
-    });
-
-    // Subscribe to selected province from Mapbox service (driven by query params)
-    this.mapboxService.selectedProvince$.subscribe(province => {
-      this.selectedMapboxProvince = province;
     });
   }
   
@@ -154,9 +152,51 @@ export class LeftSidebar implements OnInit {
     this.emitFilterChange();
   }
 
-  // Method to deselect province (clears query param)
-  onMapboxProvinceDeselect() {
+  // Load current selection data for display
+  private loadCurrentProvinceData() {
+    if (this.selectedProvince) {
+      const nepalDataObj = (nepalData as any).default || nepalData;
+      const provinces = nepalDataObj[0]?.provinces || [];
+      this.currentProvinceData = provinces.find((province: any) => province.id.toString() === this.selectedProvince);
+    } else {
+      this.currentProvinceData = null;
+    }
+  }
+
+  private loadCurrentDistrictData() {
+    if (this.selectedDistrict && this.selectedProvince) {
+      const nepalDataObj = (nepalData as any).default || nepalData;
+      const provinces = nepalDataObj[0]?.provinces || [];
+      const province = provinces.find((p: any) => p.id.toString() === this.selectedProvince);
+      this.currentDistrictData = province?.districts?.find((district: any) => district.id.toString() === this.selectedDistrict);
+    } else {
+      this.currentDistrictData = null;
+    }
+  }
+
+  private loadCurrentMunicipalityData() {
+    if (this.selectedMunicipality && this.selectedDistrict && this.selectedProvince) {
+      const nepalDataObj = (nepalData as any).default || nepalData;
+      const provinces = nepalDataObj[0]?.provinces || [];
+      const province = provinces.find((p: any) => p.id.toString() === this.selectedProvince);
+      const district = province?.districts?.find((d: any) => d.id.toString() === this.selectedDistrict);
+      this.currentMunicipalityData = district?.municipalities?.find((municipality: any) => municipality.id.toString() === this.selectedMunicipality);
+    } else {
+      this.currentMunicipalityData = null;
+    }
+  }
+
+  // Methods to deselect (clears query params)
+  onProvinceDeselect() {
     this.queryParamService.setProvince('');
+  }
+
+  onDistrictDeselect() {
+    this.queryParamService.setDistrict('');
+  }
+
+  onMunicipalityDeselect() {
+    this.queryParamService.setMunicipality('');
   }
 
   private loadDistrictsForProvince() {

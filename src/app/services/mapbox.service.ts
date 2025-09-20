@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import * as mapboxgl from 'mapbox-gl';
 import { QueryParamService } from './query-param.service';
+import * as nepalData from '../../assets/constants/nepal-data.json';
 import { NEPAL_DATA } from '../../assets/constants/nepal';
-import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface country {
   id: string;
@@ -59,6 +59,29 @@ export interface ProvinceSelection {
   geojsonFile: string;
 }
 
+export interface DistrictSelection {
+  id: string;
+  name: string;
+  localName: string;
+  population: number;
+  area: number;
+  center: [number, number];
+  geojsonFile: string;
+  provinceId: string;
+}
+
+export interface MunicipalitySelection {
+  id: string;
+  name: string;
+  localName: string;
+  population: number;
+  area: number;
+  center: [number, number];
+  geojsonFile: string;
+  districtId: string;
+  provinceId: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,14 +94,13 @@ export class MapboxService {
   private localLevels: localLevel[] = [];
   private currentCountry: string = '';
   private currentProvince: string = '';
+  private currentDistrict: string = '';
+  private currentMunicipality: string = '';
 
-  // BehaviorSubjects for reactive data
-  private provincesSubject = new BehaviorSubject<ProvinceSelection[]>([]);
-  private selectedProvinceSubject = new BehaviorSubject<ProvinceSelection | null>(null);
-
-  // Public observables
-  public provinces$ = this.provincesSubject.asObservable();
-  public selectedProvince$ = this.selectedProvinceSubject.asObservable();
+  // Current selections (for internal use only)
+  private currentProvinceData: ProvinceSelection | null = null;
+  private currentDistrictData: DistrictSelection | null = null;
+  private currentMunicipalityData: MunicipalitySelection | null = null;
 
   constructor(private queryParamService: QueryParamService) {
     // Listen to country changes
@@ -92,14 +114,34 @@ export class MapboxService {
 
     // Listen to province changes from query parameters
     this.queryParamService.province$.subscribe(provinceId => {
+      console.log('provinceId',provinceId)
       if (provinceId && this.map && this.currentCountry) {
         // Convert numeric province ID to province data ID format
         const mappedProvinceId = this.mapProvinceId(provinceId);
+        console.log(`mappedProvinceId`,mappedProvinceId)
         if (mappedProvinceId) {
           this.selectProvince(mappedProvinceId);
         }
       } else if (!provinceId) {
         this.deselectProvince();
+      }
+    });
+
+    // Listen to district changes from query parameters
+    this.queryParamService.district$.subscribe(districtId => {
+      if (districtId && this.map && this.currentProvince) {
+        this.selectDistrict(districtId);
+      } else if (!districtId) {
+        this.deselectDistrict();
+      }
+    });
+
+    // Listen to municipality changes from query parameters
+    this.queryParamService.municipality$.subscribe(municipalityId => {
+      if (municipalityId && this.map && this.currentDistrict) {
+        this.selectMunicipality(municipalityId);
+      } else if (!municipalityId) {
+        this.deselectMunicipality();
       }
     });
   }
@@ -155,28 +197,50 @@ export class MapboxService {
     this.loadCountryGeoJSON(countryData.geojsonFile, country);
   }
 
-  private loadProvincesData() {
-    if (!this.currentCountry) return;
-    
-    const provincesData = NEPAL_DATA.provinces.map(province => ({
-      id: province.id,
-      name: province.name,
-      localName: province.nameNepali,
-      population: province.population,
-      area: province.area,
-      center: [84.1240, 28.3949] as [number, number], // Default center, will be updated from GeoJSON
-      geojsonFile: this.getProvinceGeoJSONFileName(province.id, province.name)
-    }));
 
-    this.provincesSubject.next(provincesData);
+  private getGeoJSONFileName(level: 'province' | 'district' | 'municipality', provinceId: string, name: string, districtId?: string, municipalityId?: string): string {
+    const nameLower = name.toLowerCase().replace(/\s+/g, '_');
+      console.log(`mun name`,name)
+    switch (level) {
+      case 'province':
+        const id = provinceId.replace('province', '');
+        return `${nameLower}province_${id}.geojson`;
+      
+      case 'district':
+        return `${name}.geojson`;
+      
+      case 'municipality':
+        return `${nameLower}.geojson`;
+      
+      default:
+        return `${nameLower}.geojson`;
+    }
   }
 
-  private getProvinceGeoJSONFileName(provinceId: string, provinceName: string): string {
-    // Convert province name to lowercase and create filename
-    // Example: "Bagmati Province" -> "bagmati_province_3"
-    const nameLower = provinceName.toLowerCase().replace(/\s+/g, '_');
-    const id = provinceId.replace('province', '');
-    return `${nameLower}_${id}.geojson`;
+  private getGeoJSONFolderPath(level: 'province' | 'district' | 'municipality', provinceId: string, districtId?: string): string {
+    const nepalDataObj = (nepalData as any).default || nepalData;
+    const provinces = nepalDataObj[0]?.provinces || [];
+    const province = provinces.find((p: any) => p.id.toString() === provinceId.replace('province', ''));
+    
+    if (!province) return '';
+    
+    const provinceNameLower = province.name.toLowerCase().replace(/\s+/g, '_');
+    const provinceIdNum = provinceId.replace('province', '');
+    const provinceFolder = `${provinceNameLower}province_${provinceIdNum}`;
+    
+    switch (level) {
+      case 'province':
+        return `maps-of-provinces`;
+      
+      case 'district':
+        return `maps-of-districts/${provinceFolder}_districts`;
+      
+      case 'municipality':
+        return `maps-of-municipalities/${provinceFolder}/${district?.toUpperCase()}`;
+      
+      default:
+        return '';
+    }
   }
 
   private mapProvinceId(queryParamId: string): string | null {
@@ -233,21 +297,110 @@ export class MapboxService {
   public selectProvince(provinceId: string) {
     if (!this.map || !this.currentCountry) return;
 
-    const province = this.provincesSubject.value.find(p => p.id === provinceId);
-    if (!province) return;
+    // Get province data directly from nepal-data.json
+    const nepalDataObj = (nepalData as any).default || nepalData;
+    const provinces = nepalDataObj[0]?.provinces || [];
+    const provinceData = provinces.find((p: any) => p.id.toString() === provinceId.replace('province', ''));
+    if (!provinceData) return;
+
+    // Create province selection object
+    const province: ProvinceSelection = {
+      id: provinceId,
+      name: provinceData.name,
+      localName: provinceData.name_nepali || provinceData.name,
+      population: provinceData.population || 0,
+      area: parseFloat(provinceData.area_sq_km) || 0,
+      center: [84.1240, 28.3949] as [number, number],
+      geojsonFile: this.getGeoJSONFileName('province', provinceId, provinceData.name)
+    };
 
     this.currentProvince = provinceId;
-    this.selectedProvinceSubject.next(province);
+    this.currentProvinceData = province;
 
     // Clear existing province layers
     this.clearProvinceLayers();
 
     // Load province GeoJSON
+    console.log(`province data`, province.geojsonFile, province)
     this.loadProvinceGeoJSON(province.geojsonFile, province);
   }
 
+  public selectDistrict(districtId: string) {
+    if (!this.map || !this.currentProvince) return;
+
+    // Get district data directly from nepal-data.json
+    const nepalDataObj = (nepalData as any).default || nepalData;
+    const provinces = nepalDataObj[0]?.provinces || [];
+    const provinceData = provinces.find((p: any) => p.id.toString() === this.currentProvince.replace('province', ''));
+    if (!provinceData) return;
+
+    const districtData = provinceData.districts.find((d: any) => d.id.toString() === districtId);
+    if (!districtData) return;
+
+    // Create district selection object
+    const district: DistrictSelection = {
+      id: districtId,
+      name: districtData.name,
+      localName: districtData.name_nepali || districtData.name,
+      population: districtData.population || 0,
+      area: parseFloat(districtData.area_sq_km) || 0,
+      center: [84.1240, 28.3949] as [number, number],
+      geojsonFile: this.getGeoJSONFileName('district', this.currentProvince, districtData.name, districtId),
+      provinceId: this.currentProvince
+    };
+
+    this.currentDistrict = districtId;
+    this.currentDistrictData = district;
+
+    // Clear existing district layers
+    this.clearDistrictLayers();
+
+    // Load district GeoJSON
+    this.loadDistrictGeoJSON(district.geojsonFile, district);
+  }
+
+  public selectMunicipality(municipalityId: string) {
+    if (!this.map || !this.currentDistrict) return;
+
+    // Get municipality data directly from nepal-data.json
+    const nepalDataObj = (nepalData as any).default || nepalData;
+    const provinces = nepalDataObj[0]?.provinces || [];
+    const provinceData = provinces.find((p: any) => p.id.toString() === this.currentProvince.replace('province', ''));
+    if (!provinceData) return;
+
+    const districtData = provinceData.districts.find((d: any) => d.id.toString() === this.currentDistrict);
+    if (!districtData) return;
+
+    const municipalityData = districtData.municipalities.find((m: any) => m.id.toString() === municipalityId);
+    if (!municipalityData) return;
+
+    // Create municipality selection object
+    const municipality: MunicipalitySelection = {
+      id: municipalityId,
+      name: municipalityData.name,
+      localName: municipalityData.name_nepali || municipalityData.name,
+      population: municipalityData.population || 0,
+      area: parseFloat(municipalityData.area_sq_km) || 0,
+      center: [84.1240, 28.3949] as [number, number],
+      geojsonFile: this.getGeoJSONFileName('municipality', this.currentProvince, municipalityData.name, this.currentDistrict, municipalityId),
+      districtId: this.currentDistrict,
+      provinceId: this.currentProvince
+    };
+
+    this.currentMunicipality = municipalityId;
+    this.currentMunicipalityData = municipality;
+
+    // Clear existing municipality layers
+    this.clearMunicipalityLayers();
+
+    // Load municipality GeoJSON
+    this.loadMunicipalityGeoJSON(municipality.geojsonFile, municipality);
+  }
+
   private loadProvinceGeoJSON(filename: string, province: ProvinceSelection) {
-    const filePath = `/assets/map-data/${this.currentCountry}/maps-of-nepal/maps-of-provinces/${filename}`;
+    const folderPath = this.getGeoJSONFolderPath('province', province.id);
+    console.log(`folderPath`,folderPath)
+    const filePath = `/assets/map-data/${this.currentCountry}/maps-of-nepal/${folderPath}/${filename}`;
     
     fetch(filePath)
       .then(response => response.json())
@@ -272,6 +425,63 @@ export class MapboxService {
         console.error(`Error loading province ${province.name} data:`, error);
       });
   }
+
+  private loadDistrictGeoJSON(filename: string, district: DistrictSelection) {
+    const folderPath = this.getGeoJSONFolderPath('district', district.provinceId);
+    const filePath = `/assets/map-data/${this.currentCountry}/maps-of-nepal/${folderPath}/${filename}`;
+    
+    fetch(filePath)
+      .then(response => response.json())
+      .then(data => {
+        console.log('district map data', data);
+        const sourceId = `district-${district.id}`;
+        
+        this.map!.addSource(sourceId, {
+          type: 'geojson',
+          data: data
+        });
+
+        this.addDistrictLayers(sourceId, district);
+        
+        // Center map on district
+        this.map!.fitBounds(this.getBoundsFromGeoJSON(data), {
+          padding: 30,
+          duration: 1000
+        });
+      })
+      .catch(error => {
+        console.error(`Error loading district ${district.name} data:`, error);
+      });
+  }
+
+  private loadMunicipalityGeoJSON(filename: string, municipality: MunicipalitySelection) {
+    const folderPath = this.getGeoJSONFolderPath('municipality', municipality.provinceId);
+    const filePath = `/assets/map-data/${this.currentCountry}/maps-of-nepal/${folderPath}/${filename}`;
+    
+    fetch(filePath)
+      .then(response => response.json())
+      .then(data => {
+        console.log('municipality map data', data);
+        const sourceId = `municipality-${municipality.id}`;
+        
+        this.map!.addSource(sourceId, {
+          type: 'geojson',
+          data: data
+        });
+
+        this.addMunicipalityLayers(sourceId, municipality);
+        
+        // Center map on municipality
+        this.map!.fitBounds(this.getBoundsFromGeoJSON(data), {
+          padding: 20,
+          duration: 1000
+        });
+      })
+      .catch(error => {
+        console.error(`Error loading municipality ${municipality.name} data:`, error);
+      });
+  }
+
 
   private getBoundsFromGeoJSON(geojson: any): mapboxgl.LngLatBounds {
     const bounds = new mapboxgl.LngLatBounds();
@@ -453,6 +663,162 @@ export class MapboxService {
     });
   }
 
+  private addDistrictLayers(sourceId: string, district: DistrictSelection) {
+    if (!this.map) return;
+
+    // Add fill layer
+    this.map.addLayer({
+      id: `district-${district.id}-fill`,
+      type: 'fill',
+      source: sourceId,
+      paint: {
+        'fill-color': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          '#f59e0b',
+          '#fbbf24'
+        ],
+        'fill-opacity': 0.6
+      }
+    });
+
+    // Add stroke layer
+    this.map.addLayer({
+      id: `district-${district.id}-stroke`,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#d97706',
+        'line-width': 2
+      }
+    });
+
+    // Add labels
+    this.map.addLayer({
+      id: `district-${district.id}-labels`,
+      type: 'symbol',
+      source: sourceId,
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': 12,
+        'text-anchor': 'center'
+      },
+      paint: {
+        'text-color': '#d97706',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 2
+      }
+    });
+
+    // Add click handlers
+    this.map.on('click', `district-${district.id}-fill`, (e) => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0];
+        const coordinates = e.lngLat;
+        
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`
+            <div class="map-popup">
+              <h3>${district.name}</h3>
+              <p>${district.localName}</p>
+              <p>Population: ${district.population.toLocaleString()}</p>
+              <p>Area: ${district.area.toLocaleString()} km²</p>
+            </div>
+          `)
+          .addTo(this.map!);
+      }
+    });
+
+    // Add hover effects
+    this.map.on('mouseenter', `district-${district.id}-fill`, () => {
+      this.map!.getCanvas().style.cursor = 'pointer';
+    });
+
+    this.map.on('mouseleave', `district-${district.id}-fill`, () => {
+      this.map!.getCanvas().style.cursor = '';
+    });
+  }
+
+  private addMunicipalityLayers(sourceId: string, municipality: MunicipalitySelection) {
+    if (!this.map) return;
+
+    // Add fill layer
+    this.map.addLayer({
+      id: `municipality-${municipality.id}-fill`,
+      type: 'fill',
+      source: sourceId,
+      paint: {
+        'fill-color': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          '#dc2626',
+          '#ef4444'
+        ],
+        'fill-opacity': 0.5
+      }
+    });
+
+    // Add stroke layer
+    this.map.addLayer({
+      id: `municipality-${municipality.id}-stroke`,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#b91c1c',
+        'line-width': 1
+      }
+    });
+
+    // Add labels
+    this.map.addLayer({
+      id: `municipality-${municipality.id}-labels`,
+      type: 'symbol',
+      source: sourceId,
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': 10,
+        'text-anchor': 'center'
+      },
+      paint: {
+        'text-color': '#b91c1c',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 1
+      }
+    });
+
+    // Add click handlers
+    this.map.on('click', `municipality-${municipality.id}-fill`, (e) => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0];
+        const coordinates = e.lngLat;
+        
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`
+            <div class="map-popup">
+              <h3>${municipality.name}</h3>
+              <p>${municipality.localName}</p>
+              <p>Population: ${municipality.population.toLocaleString()}</p>
+              <p>Area: ${municipality.area.toLocaleString()} km²</p>
+            </div>
+          `)
+          .addTo(this.map!);
+      }
+    });
+
+    // Add hover effects
+    this.map.on('mouseenter', `municipality-${municipality.id}-fill`, () => {
+      this.map!.getCanvas().style.cursor = 'pointer';
+    });
+
+    this.map.on('mouseleave', `municipality-${municipality.id}-fill`, () => {
+      this.map!.getCanvas().style.cursor = '';
+    });
+  }
+
   private clearMapLayers() {
     if (!this.map) return;
 
@@ -508,6 +874,57 @@ export class MapboxService {
     });
   }
 
+  private clearDistrictLayers() {
+    if (!this.map) return;
+
+    // Remove all district layers
+    const districtLayers = this.map.getStyle().layers
+      .filter(layer => layer.id.includes('district-'))
+      .map(layer => layer.id);
+
+    districtLayers.forEach(layerId => {
+      if (this.map!.getLayer(layerId)) {
+        this.map!.removeLayer(layerId);
+      }
+    });
+
+    // Remove all district sources
+    const districtSources = Object.keys(this.map.getStyle().sources)
+      .filter(sourceId => sourceId.includes('district-'));
+
+    districtSources.forEach(sourceId => {
+      if (this.map!.getSource(sourceId)) {
+        this.map!.removeSource(sourceId);
+      }
+    });
+  }
+
+  private clearMunicipalityLayers() {
+    if (!this.map) return;
+
+    // Remove all municipality layers
+    const municipalityLayers = this.map.getStyle().layers
+      .filter(layer => layer.id.includes('municipality-'))
+      .map(layer => layer.id);
+
+    municipalityLayers.forEach(layerId => {
+      if (this.map!.getLayer(layerId)) {
+        this.map!.removeLayer(layerId);
+      }
+    });
+
+    // Remove all municipality sources
+    const municipalitySources = Object.keys(this.map.getStyle().sources)
+      .filter(sourceId => sourceId.includes('municipality-'));
+
+    municipalitySources.forEach(sourceId => {
+      if (this.map!.getSource(sourceId)) {
+        this.map!.removeSource(sourceId);
+      }
+    });
+  }
+
+
   resetMap() {
     if (!this.map) return;
 
@@ -557,19 +974,11 @@ export class MapboxService {
     return this.map;
   }
 
-  // Public methods for province management
-  public getProvinces(): ProvinceSelection[] {
-    return this.provincesSubject.value;
-  }
-
-  public getSelectedProvince(): ProvinceSelection | null {
-    return this.selectedProvinceSubject.value;
-  }
-
   public deselectProvince() {
     this.currentProvince = '';
-    this.selectedProvinceSubject.next(null);
+    this.currentProvinceData = null;
     this.clearProvinceLayers();
+    this.deselectDistrict(); // Also deselect district and municipality
     
     // Reset to country view
     if (this.currentCountry) {
@@ -577,9 +986,19 @@ export class MapboxService {
     }
   }
 
-  getDistricts(): district[] {
-    return this.districts;
+  public deselectDistrict() {
+    this.currentDistrict = '';
+    this.currentDistrictData = null;
+    this.clearDistrictLayers();
+    this.deselectMunicipality(); // Also deselect municipality
   }
+
+  public deselectMunicipality() {
+    this.currentMunicipality = '';
+    this.currentMunicipalityData = null;
+    this.clearMunicipalityLayers();
+  }
+
   getLocalLevels(): localLevel[] {
     return this.localLevels;
   }

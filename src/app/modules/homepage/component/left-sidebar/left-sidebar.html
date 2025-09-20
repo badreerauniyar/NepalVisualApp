@@ -79,30 +79,88 @@
     </div>
   </div>
 
-  <!-- Selected Province Information -->
-  <div class="filter-section" *ngIf="selectedMapboxProvince">
-    <div class="filter-header">
-      <h3 class="filter-title">Selected Province</h3>
+    <!-- Selected Province Information -->
+    <div class="filter-section" *ngIf="currentProvinceData">
+      <div class="filter-header">
+        <h3 class="filter-title">Selected Province</h3>
+      </div>
+
+      <div class="province-selection">
+        <div class="province-item selected">
+          <div class="province-info">
+            <h4 class="province-name">{{ currentProvinceData.name }}</h4>
+            <p class="province-local">{{ currentProvinceData.name_nepali || currentProvinceData.name }}</p>
+            <div class="province-stats">
+              <span class="stat">Area: {{ currentProvinceData.area_sq_km }} km²</span>
+              <span class="stat">Headquarter: {{ currentProvinceData.headquarter }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="province-actions">
+          <button
+            class="btn btn-secondary btn-sm"
+            (click)="onProvinceDeselect()"
+          >
+            Deselect Province
+          </button>
+        </div>
+      </div>
     </div>
-    
-    <div class="province-selection">
-      <div class="province-item selected">
-        <div class="province-info">
-          <h4 class="province-name">{{ selectedMapboxProvince.name }}</h4>
-          <p class="province-local">{{ selectedMapboxProvince.localName }}</p>
-          <div class="province-stats">
-            <span class="stat">Population: {{ selectedMapboxProvince.population.toLocaleString() }}</span>
-            <span class="stat">Area: {{ selectedMapboxProvince.area.toLocaleString() }} km²</span>
+
+  <!-- Selected District Information -->
+  <div class="filter-section" *ngIf="currentDistrictData">
+    <div class="filter-header">
+      <h3 class="filter-title">Selected District</h3>
+    </div>
+
+    <div class="district-selection">
+      <div class="district-item selected">
+        <div class="district-info">
+          <h4 class="district-name">{{ currentDistrictData.name }}</h4>
+          <p class="district-local">{{ currentDistrictData.name_nepali || currentDistrictData.name }}</p>
+          <div class="district-stats">
+            <span class="stat">Area: {{ currentDistrictData.area_sq_km }} km²</span>
+            <span class="stat">Headquarter: {{ currentDistrictData.headquarter }}</span>
           </div>
         </div>
       </div>
-      
-      <div class="province-actions">
-        <button 
-          class="btn btn-secondary btn-sm" 
-          (click)="onMapboxProvinceDeselect()"
+
+      <div class="district-actions">
+        <button
+          class="btn btn-secondary btn-sm"
+          (click)="onDistrictDeselect()"
         >
-          Deselect Province
+          Deselect District
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Municipality Information -->
+  <div class="filter-section" *ngIf="currentMunicipalityData">
+    <div class="filter-header">
+      <h3 class="filter-title">Selected Municipality</h3>
+    </div>
+
+    <div class="municipality-selection">
+      <div class="municipality-item selected">
+        <div class="municipality-info">
+          <h4 class="municipality-name">{{ currentMunicipalityData.name }}</h4>
+          <p class="municipality-local">{{ currentMunicipalityData.name_nepali || currentMunicipalityData.name }}</p>
+          <div class="municipality-stats">
+            <span class="stat">Area: {{ currentMunicipalityData.area_sq_km }} km²</span>
+            <span class="stat">Wards: {{ currentMunicipalityData.wards?.length || 0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="municipality-actions">
+        <button
+          class="btn btn-secondary btn-sm"
+          (click)="onMunicipalityDeselect()"
+        >
+          Deselect Municipality
         </button>
       </div>
     </div>
