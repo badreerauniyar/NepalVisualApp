@@ -1,0 +1,123 @@
+<aside class="left-sidebar-content">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+    <h2 class="sidebar-title">Geography & Filters</h2>
+    <button class="sidebar-toggle d-md-none" (click)="toggleSidebar()" type="button">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Administrative Filters Section -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <h3 class="filter-title">Administrative Areas</h3>
+      <button class="filter-reset" (click)="resetFilters()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Reset
+      </button>
+    </div>
+
+    <!-- Country Filter -->
+    <div class="filter-group">
+      <label class="filter-label">Country</label>
+      <select class="filter-select" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
+        <option value="">Select Country</option>
+        <option value="nepal">Nepal</option>
+        <option value="india">India</option>
+        <option value="china">China</option>
+      </select>
+    </div>
+
+    <!-- Province Filter -->
+    <div class="filter-group" [class.disabled]="!selectedCountry">
+      <label class="filter-label">Province</label>
+      <select class="filter-select" [(ngModel)]="selectedProvince" (change)="onProvinceChange()" [disabled]="!selectedCountry">
+        <option value="">Select Province</option>
+        <option *ngFor="let province of provinces" [value]="province.value">
+          {{ province.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- District Filter -->
+    <div class="filter-group" [class.disabled]="!selectedProvince">
+      <label class="filter-label">District</label>
+      <select class="filter-select" [(ngModel)]="selectedDistrict" (change)="onDistrictChange()" [disabled]="!selectedProvince">
+        <option value="">Select District</option>
+        <option *ngFor="let district of districts" [value]="district.value">
+          {{ district.name }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Municipality/VDC Filter -->
+    <div class="filter-group" [class.disabled]="!selectedDistrict">
+      <label class="filter-label">Municipality/VDC</label>
+      <select class="filter-select" [(ngModel)]="selectedMunicipality" (change)="onMunicipalityChange()" [disabled]="!selectedDistrict">
+        <option value="">Select Municipality/VDC</option>
+        <option *ngFor="let municipality of municipalities" [value]="municipality.value">
+          {{ municipality.name }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Population Layer Toggle -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <h3 class="filter-title">Map Layers</h3>
+    </div>
+    
+    <div class="toggle-group">
+      <label class="toggle-label">
+        <input 
+          type="checkbox" 
+          class="toggle-input" 
+          [(ngModel)]="showPopulationLayer" 
+          (change)="onPopulationToggle()"
+        />
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Population Density</span>
+      </label>
+      <p class="toggle-description">Show population density gradient overlay</p>
+    </div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <h3 class="filter-title">Quick Stats</h3>
+    </div>
+    
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value">{{ totalSchools }}</div>
+        <div class="stat-label">Schools</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ totalPopulation }}</div>
+        <div class="stat-label">Population</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">{{ selectedArea }}</div>
+        <div class="stat-label">Area (km²)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collapse/Expand Button for Mobile -->
+  <div class="sidebar-footer d-md-none">
+    <button class="collapse-btn" (click)="toggleSidebar()" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18l6-6-6-6"/>
+      </svg>
+      Collapse
+    </button>
+  </div>
+</aside>

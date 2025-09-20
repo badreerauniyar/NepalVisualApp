@@ -1,0 +1,153 @@
+<div class="homepage-container">
+  <!-- Left Sidebar -->
+  <app-left-sidebar class="sidebar left-sidebar"></app-left-sidebar>
+  
+  <!-- Main Map Area -->
+  <div class="map-container">
+    <!-- Map Loading State -->
+    <div class="map-loading" *ngIf="isLoading">
+      <div class="loading-spinner">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
+      </div>
+      <p class="loading-text">Loading map...</p>
+    </div>
+
+    <!-- Map Container -->
+    <div id="map" class="map" [class.hidden]="isLoading"></div>
+
+    <!-- Map Controls Overlay -->
+    <div class="map-controls-overlay">
+      <!-- Zoom Controls -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" (click)="zoomIn()" type="button" title="Zoom In">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+            <line x1="11" y1="8" x2="11" y2="14"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </button>
+        <button class="zoom-btn" (click)="zoomOut()" type="button" title="Zoom Out">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Layer Controls -->
+      <div class="layer-controls">
+        <button 
+          class="layer-btn" 
+          [class.active]="showPopulationLayer"
+          (click)="togglePopulationLayer()" 
+          type="button" 
+          title="Toggle Population Layer"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 3v18h18V3H3z"/>
+            <path d="M9 9h6v6H9z"/>
+          </svg>
+          Population
+        </button>
+      </div>
+
+      <!-- Location Button -->
+      <div class="location-controls">
+        <button class="location-btn" (click)="getCurrentLocation()" type="button" title="Current Location">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Map Info Panel -->
+    <div class="map-info-panel" *ngIf="selectedFeature">
+      <div class="info-header">
+        <h3 class="info-title">{{ selectedFeature.name }}</h3>
+        <button class="info-close" (click)="closeInfoPanel()" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="info-content">
+        <div class="info-section" *ngIf="selectedFeature.type">
+          <label class="info-label">Type:</label>
+          <span class="info-value">{{ selectedFeature.type }}</span>
+        </div>
+        
+        <div class="info-section" *ngIf="selectedFeature.level">
+          <label class="info-label">Level:</label>
+          <span class="info-value">{{ selectedFeature.level }}</span>
+        </div>
+        
+        <div class="info-section" *ngIf="selectedFeature.address">
+          <label class="info-label">Address:</label>
+          <span class="info-value">{{ selectedFeature.address }}</span>
+        </div>
+        
+        <div class="info-section" *ngIf="selectedFeature.students">
+          <label class="info-label">Students:</label>
+          <span class="info-value">{{ selectedFeature.students | number }}</span>
+        </div>
+        
+        <div class="info-section" *ngIf="selectedFeature.population">
+          <label class="info-label">Population:</label>
+          <span class="info-value">{{ selectedFeature.population | number }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Results Dropdown -->
+    <div class="search-results" *ngIf="searchResults.length > 0">
+      <div class="search-results-header">
+        <h4>Search Results</h4>
+        <button class="search-results-close" (click)="clearSearchResults()" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="search-results-list">
+        <button 
+          *ngFor="let result of searchResults" 
+          class="search-result-item"
+          (click)="selectSearchResult(result)"
+          type="button"
+        >
+          <div class="result-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div class="result-content">
+            <div class="result-name">{{ result.name }}</div>
+            <div class="result-type">{{ result.type }}</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Map Attribution -->
+    <div class="map-attribution">
+      <span>© OpenStreetMap contributors</span>
+      <span>•</span>
+      <span>Mapbox</span>
+    </div>
+  </div>
+  
+  <!-- Right Sidebar -->
+  <app-right-sidebar class="sidebar right-sidebar"></app-right-sidebar>
+</div>
+
