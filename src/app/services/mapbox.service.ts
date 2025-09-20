@@ -79,6 +79,7 @@ export interface MunicipalitySelection {
   center: [number, number];
   geojsonFile: string;
   districtId: string;
+  districtName:string,
   provinceId: string;
 }
 
@@ -210,14 +211,16 @@ export class MapboxService {
         return `${name}.geojson`;
       
       case 'municipality':
-        return `${nameLower}.geojson`;
+        const cleanName = name.replace(/\s+municipality$/i, '');
+        const cleanNameLower = cleanName.toLowerCase().replace(/\s+/g, '_');
+        return `${cleanNameLower}.geojson`;
       
       default:
         return `${nameLower}.geojson`;
     }
   }
 
-  private getGeoJSONFolderPath(level: 'province' | 'district' | 'municipality', provinceId: string, districtId?: string): string {
+  private getGeoJSONFolderPath(level: 'province' | 'district' | 'municipality', provinceId: string, districtName?: string): string {
     const nepalDataObj = (nepalData as any).default || nepalData;
     const provinces = nepalDataObj[0]?.provinces || [];
     const province = provinces.find((p: any) => p.id.toString() === provinceId.replace('province', ''));
@@ -236,7 +239,8 @@ export class MapboxService {
         return `maps-of-districts/${provinceFolder}_districts`;
       
       case 'municipality':
-        return `maps-of-municipalities/${provinceFolder}/${district?.toUpperCase()}`;
+        console.log(`districtName`,districtName)
+        return `maps-of-municipalities/${provinceFolder}/${districtName?.toUpperCase()}`;
       
       default:
         return '';
@@ -384,6 +388,7 @@ export class MapboxService {
       center: [84.1240, 28.3949] as [number, number],
       geojsonFile: this.getGeoJSONFileName('municipality', this.currentProvince, municipalityData.name, this.currentDistrict, municipalityId),
       districtId: this.currentDistrict,
+      districtName:districtData.name,
       provinceId: this.currentProvince
     };
 
@@ -455,7 +460,7 @@ export class MapboxService {
   }
 
   private loadMunicipalityGeoJSON(filename: string, municipality: MunicipalitySelection) {
-    const folderPath = this.getGeoJSONFolderPath('municipality', municipality.provinceId);
+    const folderPath = this.getGeoJSONFolderPath('municipality', municipality.provinceId, municipality.districtName);
     const filePath = `/assets/map-data/${this.currentCountry}/maps-of-nepal/${folderPath}/${filename}`;
     
     fetch(filePath)
