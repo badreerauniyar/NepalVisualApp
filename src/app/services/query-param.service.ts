@@ -35,9 +35,7 @@ export class QueryParamService {
   }
 
   private updateAllFromQuery() {
-    console.log('updateAllFromQuery')
     this.route.queryParams.subscribe(params => {
-    console.log('updateAllFromQuery',params)
       const country = params['country'] || '';
       const province = params['province'] || '';
       const district = params['district'] || '';
@@ -69,8 +67,7 @@ export class QueryParamService {
       relativeTo: this.route,
       queryParams: { 
         country: country,
-      },
-      queryParamsHandling: 'merge'
+      }
     });
   }
 
@@ -79,9 +76,9 @@ export class QueryParamService {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { 
+        country:this.countrySubject.value,
         province: province,
       },
-      queryParamsHandling: 'merge'
     });
   }
 
@@ -90,9 +87,10 @@ export class QueryParamService {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { 
+        country:this.countrySubject.value,
+        province: this.provinceSubject.value,
         district: district,
       },
-      queryParamsHandling: 'merge'
     });
   }
 
@@ -101,9 +99,11 @@ export class QueryParamService {
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { 
+        country:this.countrySubject.value,
+        province: this.provinceSubject.value,
+        district: this.districtSubject.value,
         municipality: municipality,
       },
-      queryParamsHandling: 'merge'
     });
   }
 
@@ -111,7 +111,12 @@ export class QueryParamService {
     this.wardSubject.next(ward);
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { ward: ward },
+      queryParams: { 
+        country:this.countrySubject.value,
+        province: this.provinceSubject.value,
+        district: this.districtSubject.value,
+        municipality: this.municipalitySubject.value,
+        ward: ward },
       queryParamsHandling: 'merge'
     });
   }
