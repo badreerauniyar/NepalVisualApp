@@ -99,7 +99,7 @@ export class MapboxService {
   }
 
 
-  private loadCountryData(country: string) {
+  public loadCountryData(country: string) {
     if(!country) return 
     if (!this.map) return;
 
@@ -144,10 +144,10 @@ export class MapboxService {
   private loadCountryGeoJSON(filename: string, country: string) {
     console.log('filename',filename);
     console.log('country',country);
-    fetch(`/assets/map-data/${country}/${filename}`)
+    fetch(`/assets/map-data/${country}/maps-of-nepal/${country}.geojson`)
       .then(response => response.json())
       .then(data => {
-        console.log('data',data);
+        console.log('country map data',data);
         const sourceId = `${country}-boundaries`;
         console.log('sourceId',sourceId);
         this.map!.addSource(sourceId, {

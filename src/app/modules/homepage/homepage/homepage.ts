@@ -71,7 +71,7 @@ export class Homepage implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('Homepage component initialized');
-    // this.initializeMap();
+    this.initializeMap();
   }
 
   ngOnDestroy() {
@@ -174,8 +174,10 @@ export class Homepage implements OnInit, OnDestroy {
 
   // Handle filter changes from left sidebar
   onFilterChange(filter: MapFilter) {
-    // console.log('Filter changed:', filter);
-    
+    if(filter.country){
+      // this.mapboxService.loadCountryData(filter.country);
+
+    }
     if (filter.province) {
       // this.mapboxService.filterByProvince(filter.province);
     } else if (filter.district) {
