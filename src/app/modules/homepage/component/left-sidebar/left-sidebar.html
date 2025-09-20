@@ -66,6 +66,17 @@
         </option>
       </select>
     </div>
+
+    <!-- Ward Filter -->
+    <div class="filter-group" [class.disabled]="!selectedMunicipality">
+      <label class="filter-label">Ward</label>
+      <select class="filter-select" [(ngModel)]="selectedWard" (change)="onWardChange()" [disabled]="!selectedMunicipality">
+        <option value="">Select Ward</option>
+        <option *ngFor="let ward of wards" [value]="ward.wardNumber">
+          Ward {{ ward.wardNumber }}
+        </option>
+      </select>
+    </div>
   </div>
 
   <!-- Population Layer Toggle -->

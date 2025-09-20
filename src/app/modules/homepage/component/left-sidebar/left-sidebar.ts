@@ -2,8 +2,8 @@ import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QueryParamService } from '../../../../services/query-param.service';
-import { NEPAL_DATA } from '../../../../../assets/constants/nepal';
 import { INDIA_DATA } from '../../../../../assets/constants/india';
+import * as nepalData from '../../../../../assets/constants/nepal-data.json';
 
 
 interface FilterOption {
@@ -12,32 +12,36 @@ interface FilterOption {
 }
 
 interface Province {
-  id: string;
+  id: number;
   name: string;
-  nameNepali?: string;
-  nameLocal?: string;
-  population: number;
-  area: number;
-  districts?: District[];
+  area_sq_km: string;
+  website: string;
+  headquarter: string;
+  districts: District[];
 }
 
 interface District {
-  id: string;
+  id: number;
+  province_id: number;
   name: string;
-  nameNepali?: string;
-  nameLocal?: string;
-  population: number;
-  area: number;
-  municipalities?: Municipality[];
+  area_sq_km: string;
+  website: string;
+  headquarter: string;
+  municipalities: Municipality[];
 }
 
 interface Municipality {
-  id: string;
+  id: number;
+  district_id: number;
+  category_id: number;
   name: string;
-  nameNepali?: string;
-  nameLocal?: string;
-  population: number;
-  area: number;
+  area_sq_km: string;
+  website: string;
+  wards: number[];
+}
+
+interface Ward {
+  wardNumber: number;
 }
 
 @Component({
@@ -56,12 +60,14 @@ export class LeftSidebar implements OnInit {
   selectedProvince = '';
   selectedDistrict = '';
   selectedMunicipality = '';
+  selectedWard = '';
   showPopulationLayer = false;
 
   // Data from constants files
   provinces: Province[] = [];
   districts: District[] = [];
   municipalities: Municipality[] = [];
+  wards: Ward[] = [];
 
   // Stats (mock data)
   totalSchools = '2,847';
@@ -75,61 +81,84 @@ export class LeftSidebar implements OnInit {
   }
 
   ngOnInit() {
-    // Listen to country changes
+    // Listen to all parameter changes
     this.queryParamService.country$.subscribe(country => {
-      if(country){
-        this.selectedCountry=country
-        this.loadCountryMap(this.selectedCountry)
+      if(country !== this.selectedCountry){
+        this.selectedCountry = country;
+        this.loadStateData(this.selectedCountry);
+      }
+    });
+
+    this.queryParamService.province$.subscribe(province => {
+      if(province !== this.selectedProvince){
+        this.selectedProvince = province;
+        this.onProvinceChange();
+      }
+    });
+
+    this.queryParamService.district$.subscribe(district => {
+      if(district !== this.selectedDistrict){
+        this.selectedDistrict = district;
+        this.onDistrictChange();
+      }
+    });
+
+    this.queryParamService.municipality$.subscribe(municipality => {
+      if(municipality !== this.selectedMunicipality){
+        this.selectedMunicipality = municipality;
+        this.onMunicipalityChange();
+      }
+    });
+
+    this.queryParamService.ward$.subscribe(ward => {
+      if(ward !== this.selectedWard){
+        this.selectedWard = ward;
+        this.onWardChange();
       }
     });
   }
   
-  private loadCountryMap(country: string) {
+  private loadStateData(country: string) {
     switch (country?.toLowerCase()) {
       case 'nepal':
-        this.provinces = NEPAL_DATA.provinces.map(province => ({
-          id: province.id,
-          name: province.name,
-          nameNepali: province.nameNepali,
-          population: province.population,
-          area: province.area,
-          districts: province.districts?.map(district => ({
-            id: district.id,
-            name: district.name,
-            nameNepali: district.nameNepali,
-            population: district.population,
-            area: district.area,
-            municipalities: district.municipalities?.map(municipality => ({
-              id: municipality.id,
-              name: municipality.name,
-              nameNepali: municipality.nameNepali,
-              population: municipality.population,
-              area: municipality.area
-            }))
-          }))
+        // Extract only provinces from nepalData, avoiding heavy district data
+        const nepalDataObj = (nepalData as any).default || nepalData;
+        const states = nepalDataObj[0]?.states || [];
+        
+        // Map states to provinces and remove districts data to keep it lightweight
+        this.provinces = states.map((state: any) => ({
+          id: state.id,
+          name: state.name,
+          area_sq_km: state.area_sq_km,
+          website: state.website,
+          headquarter: state.headquarter,
+          districts: [] // Empty array - districts will be loaded when needed
         }));
         break;
       case 'india':
         this.provinces = INDIA_DATA.states.map(state => ({
-          id: state.id,
+          id: parseInt(state.id),
           name: state.name,
-          nameLocal: state.nameLocal,
-          population: state.population,
-          area: state.area,
+          area_sq_km: state.area.toString(),
+          website: '',
+          headquarter: '',
           districts: state.districts?.map(district => ({
-            id: district.id,
+            id: parseInt(district.id),
+            province_id: parseInt(state.id),
             name: district.name,
-            nameLocal: district.nameLocal,
-            population: district.population,
-            area: district.area,
+            area_sq_km: district.area.toString(),
+            website: '',
+            headquarter: '',
             municipalities: district.municipalities?.map(municipality => ({
-              id: municipality.id,
+              id: parseInt(municipality.id),
+              district_id: parseInt(district.id),
+              category_id: 3,
               name: municipality.name,
-              nameLocal: municipality.nameLocal,
-              population: municipality.population,
-              area: municipality.area
+              area_sq_km: municipality.area.toString(),
+              website: '',
+              wards: []
             }))
-          }))
+          })) || []
         }));
         break;
       default:
@@ -138,29 +167,30 @@ export class LeftSidebar implements OnInit {
   }
 
   onCountryChange() {
-    this.selectedProvince = '';
-    this.selectedDistrict = '';
-    this.selectedMunicipality = '';
-    this.districts = [];
-    this.municipalities = [];
-    
-    // Update query parameter
     this.queryParamService.setCountry(this.selectedCountry);
-    
     this.emitFilterChange();
   }
 
   onProvinceChange() {
-    this.selectedDistrict = '';
-    this.selectedMunicipality = '';
-    this.municipalities = [];
+    this.queryParamService.setProvince(this.selectedProvince);
     
     // Get districts for selected province from constants data
     if (this.selectedProvince) {
-      const selectedProvinceData = this.provinces.find(
-        province => province.id === this.selectedProvince
-      );
-      this.districts = selectedProvinceData?.districts || [];
+      // Load districts dynamically from nepalData
+      const nepalDataObj = (nepalData as any).default || nepalData;
+      const states = nepalDataObj[0]?.states || [];
+      const selectedState = states.find((state: any) => state.id.toString() === this.selectedProvince);
+      
+      // Map districts and remove municipalities data to keep it lightweight
+      this.districts = selectedState?.districts?.map((district: any) => ({
+        id: district.id,
+        province_id: district.province_id,
+        name: district.name,
+        area_sq_km: district.area_sq_km,
+        website: district.website,
+        headquarter: district.headquarter,
+        municipalities: [] // Empty array - municipalities will be loaded when needed
+      })) || [];
     } else {
       this.districts = [];
     }
@@ -169,14 +199,26 @@ export class LeftSidebar implements OnInit {
   }
 
   onDistrictChange() {
-    this.selectedMunicipality = '';
+    this.queryParamService.setDistrict(this.selectedDistrict);
     
     // Get municipalities for selected district from constants data
     if (this.selectedDistrict) {
-      const selectedDistrictData = this.districts.find(
-        district => district.id === this.selectedDistrict
-      );
-      this.municipalities = selectedDistrictData?.municipalities || [];
+      // Load municipalities dynamically from nepalData
+      const nepalDataObj = (nepalData as any).default || nepalData;
+      const states = nepalDataObj[0]?.states || [];
+      const selectedState = states.find((state: any) => state.id.toString() === this.selectedProvince);
+      const selectedDistrict = selectedState?.districts?.find((district: any) => district.id.toString() === this.selectedDistrict);
+      
+      // Map municipalities and remove wards data to keep it lightweight
+      this.municipalities = selectedDistrict?.municipalities?.map((municipality: any) => ({
+        id: municipality.id,
+        district_id: municipality.district_id,
+        category_id: municipality.category_id,
+        name: municipality.name,
+        area_sq_km: municipality.area_sq_km,
+        website: municipality.website,
+        wards: [] // Empty array - wards will be loaded when needed
+      })) || [];
     } else {
       this.municipalities = [];
     }
@@ -185,6 +227,27 @@ export class LeftSidebar implements OnInit {
   }
 
   onMunicipalityChange() {
+    this.queryParamService.setMunicipality(this.selectedMunicipality);
+    
+    // Get wards for selected municipality
+    if (this.selectedMunicipality) {
+      // Load wards dynamically from nepalData
+      const nepalDataObj = (nepalData as any).default || nepalData;
+      const states = nepalDataObj[0]?.states || [];
+      const selectedState = states.find((state: any) => state.id.toString() === this.selectedProvince);
+      const selectedDistrict = selectedState?.districts?.find((district: any) => district.id.toString() === this.selectedDistrict);
+      const selectedMunicipality = selectedDistrict?.municipalities?.find((municipality: any) => municipality.id.toString() === this.selectedMunicipality);
+      
+      this.wards = selectedMunicipality?.wards?.map((wardNumber: number) => ({ wardNumber })) || [];
+    } else {
+      this.wards = [];
+    }
+    
+    this.emitFilterChange();
+  }
+
+  onWardChange() {
+    this.queryParamService.setWard(this.selectedWard);
     this.emitFilterChange();
   }
 
@@ -197,8 +260,10 @@ export class LeftSidebar implements OnInit {
     this.selectedProvince = '';
     this.selectedDistrict = '';
     this.selectedMunicipality = '';
+    this.selectedWard = '';
     this.districts = [];
     this.municipalities = [];
+    this.wards = [];
     this.emitFilterChange();
   }
 
@@ -211,7 +276,8 @@ export class LeftSidebar implements OnInit {
       country: this.selectedCountry,
       province: this.selectedProvince,
       district: this.selectedDistrict,
-      municipality: this.selectedMunicipality
+      municipality: this.selectedMunicipality,
+      ward: this.selectedWard
     });
   }
 }

@@ -71,7 +71,7 @@ export class Homepage implements OnInit, OnDestroy {
 
   ngOnInit() {
     console.log('Homepage component initialized');
-    this.initializeMap();
+    // this.initializeMap();
   }
 
   ngOnDestroy() {
