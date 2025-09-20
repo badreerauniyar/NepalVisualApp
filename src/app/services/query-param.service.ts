@@ -7,7 +7,7 @@ import { filter } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class QueryParamService {
-  private countrySubject = new BehaviorSubject<string>('nepal');
+  private countrySubject = new BehaviorSubject<string>('');
   public country$ = this.countrySubject.asObservable();
 
   constructor(
@@ -27,7 +27,7 @@ export class QueryParamService {
 
   private updateCountryFromQuery() {
     this.route.queryParams.subscribe(params => {
-      const country = params['country'] || 'nepal';
+      const country = params['country'];
       this.countrySubject.next(country);
     });
   }

@@ -4,30 +4,42 @@ import * as mapboxgl from 'mapbox-gl';
 import { QueryParamService } from './query-param.service';
 import { NEPAL_DATA } from '../../assets/constants/nepal';
 
-export interface NepalProvince {
+export interface country {
   id: string;
   name: string;
-  nameNepali: string;
-  coordinates: [number, number];
-  bounds: [[number, number], [number, number]];
-}
-
-export interface NepalDistrict {
-  id: string;
-  name: string;
-  nameNepali: string;
-  provinceId: string;
-  coordinates: [number, number];
-}
-
-export interface IndiaState {
-  id: string;
-  name: string;
-  nameHindi: string;
+  localName: string;
   population: number;
   area: number;
-  coordinates: [number, number];
+  center: [number, number];
+  zoom: number;
+  geojsonFile: string;
 }
+export interface province {
+  id: string;
+  name: string;
+  localName: string;
+  population: number;
+  area: number;
+  center: [number, number];
+}
+
+export interface district {
+  id: string;
+  name: string;
+  localName: string;
+  population: number;
+  area: number;
+  center: [number, number];
+}
+export interface localLevel {
+  id: string;
+  name: string;
+  localName: string;
+  population: number;
+  area: number;
+  center: [number, number];
+}
+
 
 export interface MapFilter {
   country?: string;
@@ -36,30 +48,23 @@ export interface MapFilter {
   municipality?: string;
 }
 
-export interface CountryData {
-  name: string;
-  center: [number, number];
-  zoom: number;
-  bounds: [[number, number], [number, number]];
-  geojsonFile: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })
 export class MapboxService {
   private map: mapboxgl.Map | null = null;
   private isInitialized = false;
-  private provinces: NepalProvince[] = [];
-  public districts: NepalDistrict[] = [];
-  private states: IndiaState[] = [];
-  private currentCountry = 'nepal';
+  private countries: country[] = [];
+  private provinces: province[] = [];
+  private districts: district[] = [];
+  private localLevels: localLevel[] = [];
+  private currentCountry :string= '';
 
   constructor(private queryParamService: QueryParamService) {
     // Listen to country changes
     this.queryParamService.country$.subscribe(country => {
       this.currentCountry = country;
-      if (this.map) {
+      if (this.map && this.currentCountry ) {
         this.loadCountryData(country);
       }
     });
@@ -82,6 +87,7 @@ export class MapboxService {
 
       this.map.on('load', () => {
         this.isInitialized = true;
+        if(this.currentCountry)
         this.loadCountryData(this.currentCountry);
       });
 
@@ -94,11 +100,12 @@ export class MapboxService {
 
 
   private loadCountryData(country: string) {
+    if(!country) return 
     if (!this.map) return;
 
     // Clear existing layers
     this.clearMapLayers();
-
+    console.log(country)
     const countryData = this.getCountryData(country);
     console.log('countryData',countryData);
     if (!countryData) return;
@@ -106,7 +113,7 @@ export class MapboxService {
     // Center map on country
     this.map.flyTo({
       center: countryData.center,
-      zoom: countryData.zoom,
+      zoom: 6,
       duration: 1000
     });
 
@@ -114,15 +121,20 @@ export class MapboxService {
     this.loadCountryGeoJSON(countryData.geojsonFile, country);
   }
 
-  private getCountryData(country: string): CountryData | null {
-    switch (country.toLowerCase()) {
+  private getCountryData(country: string): country | null {
+    console.log(country)
+    if(!country) return null
+    switch (country) {
       case 'nepal':
         return {
+          id: NEPAL_DATA.countryCode,
           name: NEPAL_DATA.name,
+          localName: NEPAL_DATA.localName,
+          population: NEPAL_DATA.population,
+          area: NEPAL_DATA.area,
           center: NEPAL_DATA.center,
           zoom: NEPAL_DATA.zoom,
-          bounds: NEPAL_DATA.bounds,
-          geojsonFile: NEPAL_DATA.geojsonFile
+          geojsonFile: NEPAL_DATA.geojsonFile,
         };
       default:
         return null;
@@ -261,39 +273,7 @@ export class MapboxService {
     this.loadCountryData('nepal');
   }
 
-  private transformProvinceData(data: any) {
-    // Transform the official data to match our expected format
-    const transformedFeatures = data.features.map((feature: any) => {
-      const provinceId = `province${feature.properties.province}`;
-      const province: NepalProvince = {
-        id: provinceId,
-        name: feature.properties.pr_name,
-        nameNepali: this.getNepaliName(feature.properties.province),
-        coordinates: this.getProvinceCenter(feature.geometry),
-        bounds: this.getProvinceBounds(feature.geometry)
-      };
-      
-      // Store province data
-      this.provinces.push(province);
-      
-      return {
-        type: 'Feature' as const,
-        properties: {
-          id: provinceId,
-          name: feature.properties.pr_name,
-          nameNepali: this.getNepaliName(feature.properties.province),
-          population: this.getProvincePopulation(feature.properties.province),
-          area: this.getProvinceArea(feature.properties.province)
-        },
-        geometry: feature.geometry
-      };
-    });
-
-    return {
-      type: 'FeatureCollection' as const,
-      features: transformedFeatures
-    };
-  }
+ 
 
   private getNepaliName(provinceNumber: number): string {
     const nepaliNames: { [key: number]: string } = {
@@ -461,34 +441,7 @@ export class MapboxService {
     console.log('Using fallback province layers');
   }
 
-  filterByProvince(provinceId: string) {
-    if (!this.map) return;
 
-    const province = this.provinces.find(p => p.id === provinceId);
-    if (province) {
-      this.map.flyTo({
-        center: province.coordinates,
-        zoom: 8,
-        duration: 1000
-      });
-
-      // Highlight selected province
-      this.map.setFilter('nepal-provinces-fill', ['==', ['get', 'id'], provinceId]);
-    }
-  }
-
-  filterByDistrict(districtId: string) {
-    if (!this.map) return;
-
-    const district = this.districts.find(d => d.id === districtId);
-    if (district) {
-      this.map.flyTo({
-        center: district.coordinates,
-        zoom: 10,
-        duration: 1000
-      });
-    }
-  }
 
   resetMap() {
     if (!this.map) return;
@@ -539,13 +492,17 @@ export class MapboxService {
     return this.map;
   }
 
-  getProvinces(): NepalProvince[] {
-    return this.provinces;
-  }
+ 
 
-  getDistricts(): NepalDistrict[] {
-    return this.districts;
-  }
+    getDistricts(): district[] {
+      return this.districts;
+    }
+    getLocalLevels(): localLevel[] {
+      return this.localLevels;
+    }
+    getCountries(): country[] {
+      return this.countries;
+    }
 
   destroy() {
     if (this.map) {

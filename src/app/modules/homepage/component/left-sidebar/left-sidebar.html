@@ -27,6 +27,7 @@
     <div class="filter-group">
       <label class="filter-label">Country</label>
       <select class="filter-select" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
+        <option value="">Select a country</option>
         <option value="nepal">Nepal</option>
         <option value="india">India</option>
         <option value="china">China</option>
@@ -60,7 +61,7 @@
       <label class="filter-label">Municipality/VDC</label>
       <select class="filter-select" [(ngModel)]="selectedMunicipality" (change)="onMunicipalityChange()" [disabled]="!selectedDistrict">
         <option value="">Select Municipality/VDC</option>
-        <option *ngFor="let municipality of municipalities" [value]="municipality.value">
+        <option *ngFor="let municipality of municipalities" [value]="municipality.id">
           {{ municipality.name }}
         </option>
       </select>

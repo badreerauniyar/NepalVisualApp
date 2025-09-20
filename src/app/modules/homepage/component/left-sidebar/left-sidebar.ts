@@ -1,12 +1,43 @@
 import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MapboxService, NepalProvince, NepalDistrict } from '../../../../services/mapbox.service';
 import { QueryParamService } from '../../../../services/query-param.service';
+import { NEPAL_DATA } from '../../../../../assets/constants/nepal';
+import { INDIA_DATA } from '../../../../../assets/constants/india';
+
 
 interface FilterOption {
   value: string;
   name: string;
+}
+
+interface Province {
+  id: string;
+  name: string;
+  nameNepali?: string;
+  nameLocal?: string;
+  population: number;
+  area: number;
+  districts?: District[];
+}
+
+interface District {
+  id: string;
+  name: string;
+  nameNepali?: string;
+  nameLocal?: string;
+  population: number;
+  area: number;
+  municipalities?: Municipality[];
+}
+
+interface Municipality {
+  id: string;
+  name: string;
+  nameNepali?: string;
+  nameLocal?: string;
+  population: number;
+  area: number;
 }
 
 @Component({
@@ -21,16 +52,16 @@ export class LeftSidebar implements OnInit {
   @Output() sidebarToggle = new EventEmitter<void>();
 
   // Filter values
-  selectedCountry = 'nepal';
+  selectedCountry = '';
   selectedProvince = '';
   selectedDistrict = '';
   selectedMunicipality = '';
   showPopulationLayer = false;
 
-  // Real Nepal data from MapboxService
-  provinces: NepalProvince[] = [];
-  districts: NepalDistrict[] = [];
-  municipalities: FilterOption[] = [];
+  // Data from constants files
+  provinces: Province[] = [];
+  districts: District[] = [];
+  municipalities: Municipality[] = [];
 
   // Stats (mock data)
   totalSchools = '2,847';
@@ -38,31 +69,69 @@ export class LeftSidebar implements OnInit {
   selectedArea = '147,181';
 
   constructor(
-    private mapboxService: MapboxService,
     private queryParamService: QueryParamService
   ) {
-    // Provinces will be loaded dynamically from GeoJSON
+    // Data will be loaded from constants files based on selected country
   }
 
   ngOnInit() {
     // Listen to country changes
     this.queryParamService.country$.subscribe(country => {
+      console.log(country)
       this.selectedCountry = country;
-      this.updateProvincesForCountry(country);
+      if(this.selectedCountry){
+        this.loadCountryMap(this.selectedCountry)
+      }
     });
-
-    // Load initial data
-    this.updateProvincesForCountry(this.queryParamService.getCurrentCountry());
   }
-
-  private updateProvincesForCountry(country: string) {
-    switch (country.toLowerCase()) {
+  
+  private loadCountryMap(country: string) {
+    switch (country?.toLowerCase()) {
       case 'nepal':
-        this.provinces = this.mapboxService.getProvinces();
+        this.provinces = NEPAL_DATA.provinces.map(province => ({
+          id: province.id,
+          name: province.name,
+          nameNepali: province.nameNepali,
+          population: province.population,
+          area: province.area,
+          districts: province.districts?.map(district => ({
+            id: district.id,
+            name: district.name,
+            nameNepali: district.nameNepali,
+            population: district.population,
+            area: district.area,
+            municipalities: district.municipalities?.map(municipality => ({
+              id: municipality.id,
+              name: municipality.name,
+              nameNepali: municipality.nameNepali,
+              population: municipality.population,
+              area: municipality.area
+            }))
+          }))
+        }));
         break;
       case 'india':
-        // For India, we'll use states instead of provinces
-        this.provinces = [];
+        this.provinces = INDIA_DATA.states.map(state => ({
+          id: state.id,
+          name: state.name,
+          nameLocal: state.nameLocal,
+          population: state.population,
+          area: state.area,
+          districts: state.districts?.map(district => ({
+            id: district.id,
+            name: district.name,
+            nameLocal: district.nameLocal,
+            population: district.population,
+            area: district.area,
+            municipalities: district.municipalities?.map(municipality => ({
+              id: municipality.id,
+              name: municipality.name,
+              nameLocal: municipality.nameLocal,
+              population: municipality.population,
+              area: municipality.area
+            }))
+          }))
+        }));
         break;
       default:
         this.provinces = [];
@@ -87,11 +156,12 @@ export class LeftSidebar implements OnInit {
     this.selectedMunicipality = '';
     this.municipalities = [];
     
-    // Get districts for selected province
+    // Get districts for selected province from constants data
     if (this.selectedProvince) {
-      this.districts = this.mapboxService.districts.filter(
-        district => district.provinceId === this.selectedProvince
+      const selectedProvinceData = this.provinces.find(
+        province => province.id === this.selectedProvince
       );
+      this.districts = selectedProvinceData?.districts || [];
     } else {
       this.districts = [];
     }
@@ -102,14 +172,12 @@ export class LeftSidebar implements OnInit {
   onDistrictChange() {
     this.selectedMunicipality = '';
     
-    // Mock municipalities based on selected district
-    // In a real app, this would come from a service
+    // Get municipalities for selected district from constants data
     if (this.selectedDistrict) {
-      this.municipalities = [
-        { value: 'municipality1', name: 'Municipality 1' },
-        { value: 'municipality2', name: 'Municipality 2' },
-        { value: 'municipality3', name: 'Municipality 3' }
-      ];
+      const selectedDistrictData = this.districts.find(
+        district => district.id === this.selectedDistrict
+      );
+      this.municipalities = selectedDistrictData?.municipalities || [];
     } else {
       this.municipalities = [];
     }

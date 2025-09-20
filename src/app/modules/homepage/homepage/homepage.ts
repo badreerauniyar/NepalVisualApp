@@ -177,9 +177,9 @@ export class Homepage implements OnInit, OnDestroy {
     console.log('Filter changed:', filter);
     
     if (filter.province) {
-      this.mapboxService.filterByProvince(filter.province);
+      // this.mapboxService.filterByProvince(filter.province);
     } else if (filter.district) {
-      this.mapboxService.filterByDistrict(filter.district);
+      // this.mapboxService.filterByDistrict(filter.district);
     } else if (!filter.country) {
       this.mapboxService.resetMap();
     }
