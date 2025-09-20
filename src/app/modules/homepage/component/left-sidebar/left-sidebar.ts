@@ -116,10 +116,10 @@ export class LeftSidebar implements OnInit {
       case 'nepal':
         // Extract only provinces from nepalData, avoiding heavy district data
         const nepalDataObj = (nepalData as any).default || nepalData;
-        const states = nepalDataObj[0]?.states || [];
+        const provinces = nepalDataObj[0]?.provinces || [];
         
-        // Map states to provinces and remove districts data to keep it lightweight
-        this.provinces = states.map((state: any) => ({
+        // Map provinces to provinces and remove districts data to keep it lightweight
+        this.provinces = provinces.map((state: any) => ({
           id: state.id,
           name: state.name,
           area_sq_km: state.area_sq_km,
@@ -128,32 +128,6 @@ export class LeftSidebar implements OnInit {
           districts: [] // Empty array - districts will be loaded when needed
         }));
         console.log(this.provinces)
-        break;
-      case 'india':
-        this.provinces = INDIA_DATA.states.map(state => ({
-          id: parseInt(state.id),
-          name: state.name,
-          area_sq_km: state.area.toString(),
-          website: '',
-          headquarter: '',
-          districts: state.districts?.map(district => ({
-            id: parseInt(district.id),
-            province_id: parseInt(state.id),
-            name: district.name,
-            area_sq_km: district.area.toString(),
-            website: '',
-            headquarter: '',
-            municipalities: district.municipalities?.map(municipality => ({
-              id: parseInt(municipality.id),
-              district_id: parseInt(district.id),
-              category_id: 3,
-              name: municipality.name,
-              area_sq_km: municipality.area.toString(),
-              website: '',
-              wards: []
-            }))
-          })) || []
-        }));
         break;
       default:
         this.provinces = [];
@@ -176,8 +150,8 @@ export class LeftSidebar implements OnInit {
     if (this.selectedProvince) {
       // Load districts dynamically from nepalData
       const nepalDataObj = (nepalData as any).default || nepalData;
-      const states = nepalDataObj[0]?.states || [];
-      const selectedState = states.find((state: any) => state.id.toString() === this.selectedProvince);
+      const provinces = nepalDataObj[0]?.provinces || [];
+      const selectedState = provinces.find((state: any) => state.id.toString() === this.selectedProvince);
       
       // Map districts and remove municipalities data to keep it lightweight
       this.districts = selectedState?.districts?.map((district: any) => ({
@@ -205,8 +179,8 @@ export class LeftSidebar implements OnInit {
     if (this.selectedDistrict) {
       // Load municipalities dynamically from nepalData
       const nepalDataObj = (nepalData as any).default || nepalData;
-      const states = nepalDataObj[0]?.states || [];
-      const selectedState = states.find((state: any) => state.id.toString() === this.selectedProvince);
+      const provinces = nepalDataObj[0]?.provinces || [];
+      const selectedState = provinces.find((state: any) => state.id.toString() === this.selectedProvince);
       const selectedDistrict = selectedState?.districts?.find((district: any) => district.id.toString() === this.selectedDistrict);
       
       // Map municipalities and remove wards data to keep it lightweight
@@ -235,8 +209,8 @@ export class LeftSidebar implements OnInit {
     if (this.selectedMunicipality) {
       // Load wards dynamically from nepalData
       const nepalDataObj = (nepalData as any).default || nepalData;
-      const states = nepalDataObj[0]?.states || [];
-      const selectedState = states.find((state: any) => state.id.toString() === this.selectedProvince);
+      const provinces = nepalDataObj[0]?.provinces || [];
+      const selectedState = provinces.find((state: any) => state.id.toString() === this.selectedProvince);
       const selectedDistrict = selectedState?.districts?.find((district: any) => district.id.toString() === this.selectedDistrict);
       const selectedMunicipality = selectedDistrict?.municipalities?.find((municipality: any) => municipality.id.toString() === this.selectedMunicipality);
       
