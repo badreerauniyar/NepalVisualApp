@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MapboxService, NepalProvince, NepalDistrict } from '../../../../services/mapbox.service';
 
 interface FilterOption {
   value: string;
@@ -19,30 +20,26 @@ export class LeftSidebar {
   @Output() sidebarToggle = new EventEmitter<void>();
 
   // Filter values
-  selectedCountry = '';
+  selectedCountry = 'nepal';
   selectedProvince = '';
   selectedDistrict = '';
   selectedMunicipality = '';
   showPopulationLayer = false;
 
-  // Sample data - in real app, this would come from a service
-  provinces: FilterOption[] = [
-    { value: 'province1', name: 'Province 1' },
-    { value: 'province2', name: 'Province 2' },
-    { value: 'province3', name: 'Province 3' },
-    { value: 'province4', name: 'Province 4' },
-    { value: 'province5', name: 'Province 5' },
-    { value: 'province6', name: 'Province 6' },
-    { value: 'province7', name: 'Province 7' }
-  ];
-
-  districts: FilterOption[] = [];
+  // Real Nepal data from MapboxService
+  provinces: NepalProvince[] = [];
+  districts: NepalDistrict[] = [];
   municipalities: FilterOption[] = [];
 
   // Stats (mock data)
   totalSchools = '2,847';
   totalPopulation = '29.1M';
   selectedArea = '147,181';
+
+  constructor(private mapboxService: MapboxService) {
+    // Initialize with Nepal data
+    this.provinces = this.mapboxService.provinces;
+  }
 
   onCountryChange() {
     this.selectedProvince = '';
@@ -58,13 +55,11 @@ export class LeftSidebar {
     this.selectedMunicipality = '';
     this.municipalities = [];
     
-    // Mock districts based on selected province
+    // Get districts for selected province
     if (this.selectedProvince) {
-      this.districts = [
-        { value: 'district1', name: 'District 1' },
-        { value: 'district2', name: 'District 2' },
-        { value: 'district3', name: 'District 3' }
-      ];
+      this.districts = this.mapboxService.districts.filter(
+        district => district.provinceId === this.selectedProvince
+      );
     } else {
       this.districts = [];
     }
@@ -76,6 +71,7 @@ export class LeftSidebar {
     this.selectedMunicipality = '';
     
     // Mock municipalities based on selected district
+    // In a real app, this would come from a service
     if (this.selectedDistrict) {
       this.municipalities = [
         { value: 'municipality1', name: 'Municipality 1' },

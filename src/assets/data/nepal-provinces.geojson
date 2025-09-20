@@ -1,0 +1,145 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province1",
+        "name": "Koshi Province",
+        "nameNepali": "कोशी प्रदेश",
+        "population": 4535000,
+        "area": 25905
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.0, 26.0],
+          [88.5, 26.0],
+          [88.5, 28.0],
+          [86.0, 28.0],
+          [86.0, 26.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province2",
+        "name": "Madhesh Province",
+        "nameNepali": "मधेश प्रदेश",
+        "population": 6140000,
+        "area": 9661
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [84.0, 26.0],
+          [87.0, 26.0],
+          [87.0, 27.5],
+          [84.0, 27.5],
+          [84.0, 26.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province3",
+        "name": "Bagmati Province",
+        "nameNepali": "बागमती प्रदेश",
+        "population": 5520000,
+        "area": 20300
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [84.0, 27.0],
+          [86.5, 27.0],
+          [86.5, 28.5],
+          [84.0, 28.5],
+          [84.0, 27.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province4",
+        "name": "Gandaki Province",
+        "nameNepali": "गण्डकी प्रदेश",
+        "population": 2400000,
+        "area": 21504
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [82.5, 27.5],
+          [85.0, 27.5],
+          [85.0, 29.0],
+          [82.5, 29.0],
+          [82.5, 27.5]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province5",
+        "name": "Lumbini Province",
+        "nameNepali": "लुम्बिनी प्रदेश",
+        "population": 5000000,
+        "area": 22288
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [81.0, 27.0],
+          [84.0, 27.0],
+          [84.0, 28.5],
+          [81.0, 28.5],
+          [81.0, 27.0]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province6",
+        "name": "Karnali Province",
+        "nameNepali": "कर्णाली प्रदेश",
+        "population": 1700000,
+        "area": 27984
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [80.0, 28.5],
+          [83.0, 28.5],
+          [83.0, 30.0],
+          [80.0, 30.0],
+          [80.0, 28.5]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "province7",
+        "name": "Sudurpashchim Province",
+        "nameNepali": "सुदूरपश्चिम प्रदेश",
+        "population": 2600000,
+        "area": 19539
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [79.0, 28.5],
+          [81.5, 28.5],
+          [81.5, 30.5],
+          [79.0, 30.5],
+          [79.0, 28.5]
+        ]]
+      }
+    }
+  ]
+}

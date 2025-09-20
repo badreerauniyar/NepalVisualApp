@@ -3,6 +3,9 @@
 // Import Bootstrap
 @use 'bootstrap/scss/bootstrap' as *;
 
+// Import Mapbox GL CSS
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
 // Design System Variables
 :root {
   // Color Palette
@@ -204,6 +207,93 @@ body {
   
   .card-body {
     padding: var(--spacing-6);
+  }
+}
+
+// Mapbox Custom Styles
+.mapboxgl-popup {
+  .mapboxgl-popup-content {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-4);
+  }
+  
+  .mapboxgl-popup-close-button {
+    color: var(--gray-500);
+    font-size: 18px;
+    padding: var(--spacing-2);
+    
+    &:hover {
+      color: var(--gray-700);
+    }
+  }
+}
+
+.map-popup {
+  h3 {
+    margin: 0 0 var(--spacing-2) 0;
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--gray-800);
+  }
+  
+  p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--gray-600);
+  }
+}
+
+// Map container styles
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  
+  .map {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-lg);
+  }
+  
+  .map-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gray-50);
+    z-index: 10;
+    
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+      color: var(--primary-color);
+      margin-bottom: var(--spacing-4);
+    }
+    
+    .loading-text {
+      color: var(--gray-600);
+      font-size: var(--font-size-sm);
+      font-weight: 500;
+    }
+  }
+  
+  .hidden {
+    display: none;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

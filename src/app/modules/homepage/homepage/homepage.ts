@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LeftSidebar } from '../component/left-sidebar/left-sidebar';
 import { RightSidebar } from '../component/right-sidebar/right-sidebar';
+import { MapboxService, MapFilter } from '../../../services/mapbox.service';
+import * as mapboxgl from 'mapbox-gl';
 
 interface MapFeature {
   id: string;
@@ -32,6 +34,7 @@ export class Homepage implements OnInit, OnDestroy {
   showPopulationLayer = false;
   selectedFeature: MapFeature | null = null;
   searchResults: SearchResult[] = [];
+  private map: mapboxgl.Map | null = null;
   
   // Mock data for demonstration
   private mockFeatures: MapFeature[] = [
@@ -64,37 +67,44 @@ export class Homepage implements OnInit, OnDestroy {
     }
   ];
 
+  constructor(private mapboxService: MapboxService) {}
+
   ngOnInit() {
     console.log('Homepage component initialized');
-    // Simulate map loading
-    setTimeout(() => {
-      this.isLoading = false;
-      this.initializeMap();
-    }, 2000);
+    this.initializeMap();
   }
 
   ngOnDestroy() {
-    // Cleanup map instance if needed
+    this.mapboxService.destroy();
   }
 
-  private initializeMap() {
-    // In a real implementation, this would initialize Mapbox GL JS
-    console.log('Map initialized');
+  private async initializeMap() {
+    try {
+      this.map = await this.mapboxService.initializeMap('map');
+      this.isLoading = false;
+      console.log('Map initialized successfully');
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      this.isLoading = false;
+    }
   }
 
   // Map control methods
   zoomIn() {
-    console.log('Zoom in');
-    // Implement zoom in functionality
+    if (this.map) {
+      this.map.zoomIn();
+    }
   }
 
   zoomOut() {
-    console.log('Zoom out');
-    // Implement zoom out functionality
+    if (this.map) {
+      this.map.zoomOut();
+    }
   }
 
   togglePopulationLayer() {
     this.showPopulationLayer = !this.showPopulationLayer;
+    this.mapboxService.togglePopulationLayer(this.showPopulationLayer);
     console.log('Population layer toggled:', this.showPopulationLayer);
   }
 
@@ -103,7 +113,13 @@ export class Homepage implements OnInit, OnDestroy {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           console.log('Current location:', position.coords);
-          // Center map on current location
+          if (this.map) {
+            this.map.flyTo({
+              center: [position.coords.longitude, position.coords.latitude],
+              zoom: 12,
+              duration: 1000
+            });
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -154,5 +170,23 @@ export class Homepage implements OnInit, OnDestroy {
   // Mock feature selection
   selectFeature(feature: MapFeature) {
     this.selectedFeature = feature;
+  }
+
+  // Handle filter changes from left sidebar
+  onFilterChange(filter: MapFilter) {
+    console.log('Filter changed:', filter);
+    
+    if (filter.province) {
+      this.mapboxService.filterByProvince(filter.province);
+    } else if (filter.district) {
+      this.mapboxService.filterByDistrict(filter.district);
+    } else if (!filter.country) {
+      this.mapboxService.resetMap();
+    }
+  }
+
+  onPopulationToggle(show: boolean) {
+    this.showPopulationLayer = show;
+    this.mapboxService.togglePopulationLayer(show);
   }
 }

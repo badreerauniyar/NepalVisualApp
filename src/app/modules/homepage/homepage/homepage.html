@@ -1,6 +1,10 @@
 <div class="homepage-container">
   <!-- Left Sidebar -->
-  <app-left-sidebar class="sidebar left-sidebar"></app-left-sidebar>
+  <app-left-sidebar 
+    class="sidebar left-sidebar"
+    (filterChange)="onFilterChange($event)"
+    (populationToggle)="onPopulationToggle($event)"
+  ></app-left-sidebar>
   
   <!-- Main Map Area -->
   <div class="map-container">

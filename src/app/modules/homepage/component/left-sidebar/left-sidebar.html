@@ -39,7 +39,7 @@
       <label class="filter-label">Province</label>
       <select class="filter-select" [(ngModel)]="selectedProvince" (change)="onProvinceChange()" [disabled]="!selectedCountry">
         <option value="">Select Province</option>
-        <option *ngFor="let province of provinces" [value]="province.value">
+        <option *ngFor="let province of provinces" [value]="province.id">
           {{ province.name }}
         </option>
       </select>
@@ -50,7 +50,7 @@
       <label class="filter-label">District</label>
       <select class="filter-select" [(ngModel)]="selectedDistrict" (change)="onDistrictChange()" [disabled]="!selectedProvince">
         <option value="">Select District</option>
-        <option *ngFor="let district of districts" [value]="district.value">
+        <option *ngFor="let district of districts" [value]="district.id">
           {{ district.name }}
         </option>
       </select>
