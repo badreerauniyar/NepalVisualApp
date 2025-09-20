@@ -6,7 +6,7 @@ export const NEPAL_DATA = {
   area: 147181,
   center: [84.1240, 28.3949] as [number, number],
   zoom: 6,
-  geojsonFile: 'nepal.geojson',
+  geojsonFile: 'nepal-provinces.geojson',
   provinces: [
     {
       id: 'province1',
