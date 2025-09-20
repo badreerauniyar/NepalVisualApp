@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import * as mapboxgl from 'mapbox-gl';
+import { QueryParamService } from './query-param.service';
+import { NEPAL_DATA } from '../../assets/constants/nepal';
 
 export interface NepalProvince {
   id: string;
@@ -18,11 +20,28 @@ export interface NepalDistrict {
   coordinates: [number, number];
 }
 
+export interface IndiaState {
+  id: string;
+  name: string;
+  nameHindi: string;
+  population: number;
+  area: number;
+  coordinates: [number, number];
+}
+
 export interface MapFilter {
   country?: string;
   province?: string;
   district?: string;
   municipality?: string;
+}
+
+export interface CountryData {
+  name: string;
+  center: [number, number];
+  zoom: number;
+  bounds: [[number, number], [number, number]];
+  geojsonFile: string;
 }
 
 @Injectable({
@@ -31,100 +50,19 @@ export interface MapFilter {
 export class MapboxService {
   private map: mapboxgl.Map | null = null;
   private isInitialized = false;
+  private provinces: NepalProvince[] = [];
+  public districts: NepalDistrict[] = [];
+  private states: IndiaState[] = [];
+  private currentCountry = 'nepal';
 
-  // Nepal provinces data
-  public readonly provinces: NepalProvince[] = [
-    {
-      id: 'province1',
-      name: 'Koshi Province',
-      nameNepali: 'कोशी प्रदेश',
-      coordinates: [87.3016, 26.8142],
-      bounds: [[86.0, 26.0], [88.5, 28.0]]
-    },
-    {
-      id: 'province2',
-      name: 'Madhesh Province',
-      nameNepali: 'मधेश प्रदेश',
-      coordinates: [85.3240, 26.8142],
-      bounds: [[84.0, 26.0], [87.0, 27.5]]
-    },
-    {
-      id: 'province3',
-      name: 'Bagmati Province',
-      nameNepali: 'बागमती प्रदेश',
-      coordinates: [85.3240, 27.7172],
-      bounds: [[84.0, 27.0], [86.5, 28.5]]
-    },
-    {
-      id: 'province4',
-      name: 'Gandaki Province',
-      nameNepali: 'गण्डकी प्रदेश',
-      coordinates: [83.9856, 28.2096],
-      bounds: [[82.5, 27.5], [85.0, 29.0]]
-    },
-    {
-      id: 'province5',
-      name: 'Lumbini Province',
-      nameNepali: 'लुम्बिनी प्रदेश',
-      coordinates: [83.2770, 27.4818],
-      bounds: [[81.0, 27.0], [84.0, 28.5]]
-    },
-    {
-      id: 'province6',
-      name: 'Karnali Province',
-      nameNepali: 'कर्णाली प्रदेश',
-      coordinates: [82.0, 29.0],
-      bounds: [[80.0, 28.5], [83.0, 30.0]]
-    },
-    {
-      id: 'province7',
-      name: 'Sudurpashchim Province',
-      nameNepali: 'सुदूरपश्चिम प्रदेश',
-      coordinates: [80.0, 29.0],
-      bounds: [[79.0, 28.5], [81.5, 30.5]]
-    }
-  ];
-
-  // Nepal districts data (sample - you can expand this)
-  public readonly districts: NepalDistrict[] = [
-    // Province 1
-    { id: 'jhapa', name: 'Jhapa', nameNepali: 'झापा', provinceId: 'province1', coordinates: [87.7, 26.5] },
-    { id: 'morang', name: 'Morang', nameNepali: 'मोरङ', provinceId: 'province1', coordinates: [87.3, 26.5] },
-    { id: 'sunsari', name: 'Sunsari', nameNepali: 'सुनसरी', provinceId: 'province1', coordinates: [87.0, 26.5] },
-    
-    // Province 2
-    { id: 'saptari', name: 'Saptari', nameNepali: 'सप्तरी', provinceId: 'province2', coordinates: [86.7, 26.5] },
-    { id: 'siraha', name: 'Siraha', nameNepali: 'सिराहा', provinceId: 'province2', coordinates: [86.2, 26.7] },
-    { id: 'dhanusha', name: 'Dhanusha', nameNepali: 'धनुषा', provinceId: 'province2', coordinates: [85.9, 26.8] },
-    
-    // Province 3
-    { id: 'kathmandu', name: 'Kathmandu', nameNepali: 'काठमाडौं', provinceId: 'province3', coordinates: [85.3240, 27.7172] },
-    { id: 'bhaktapur', name: 'Bhaktapur', nameNepali: 'भक्तपुर', provinceId: 'province3', coordinates: [85.4, 27.7] },
-    { id: 'lalitpur', name: 'Lalitpur', nameNepali: 'ललितपुर', provinceId: 'province3', coordinates: [85.3, 27.7] },
-    
-    // Province 4
-    { id: 'pokhara', name: 'Kaski', nameNepali: 'कास्की', provinceId: 'province4', coordinates: [83.9856, 28.2096] },
-    { id: 'manang', name: 'Manang', nameNepali: 'मनाङ', provinceId: 'province4', coordinates: [84.0, 28.5] },
-    { id: 'mustang', name: 'Mustang', nameNepali: 'मुस्ताङ', provinceId: 'province4', coordinates: [83.5, 28.8] },
-    
-    // Province 5
-    { id: 'lumbini', name: 'Rupandehi', nameNepali: 'रुपन्देही', provinceId: 'province5', coordinates: [83.2770, 27.4818] },
-    { id: 'kapilvastu', name: 'Kapilvastu', nameNepali: 'कपिलवस्तु', provinceId: 'province5', coordinates: [83.0, 27.5] },
-    { id: 'palpa', name: 'Palpa', nameNepali: 'पाल्पा', provinceId: 'province5', coordinates: [83.5, 27.8] },
-    
-    // Province 6
-    { id: 'jumla', name: 'Jumla', nameNepali: 'जुम्ला', provinceId: 'province6', coordinates: [82.2, 29.3] },
-    { id: 'humla', name: 'Humla', nameNepali: 'हुम्ला', provinceId: 'province6', coordinates: [81.8, 29.8] },
-    { id: 'dolpa', name: 'Dolpa', nameNepali: 'डोल्पा', provinceId: 'province6', coordinates: [82.5, 29.0] },
-    
-    // Province 7
-    { id: 'kailali', name: 'Kailali', nameNepali: 'कैलाली', provinceId: 'province7', coordinates: [80.5, 28.8] },
-    { id: 'kanchanpur', name: 'Kanchanpur', nameNepali: 'कञ्चनपुर', provinceId: 'province7', coordinates: [80.2, 28.7] },
-    { id: 'dadeldhura', name: 'Dadeldhura', nameNepali: 'डडेलधुरा', provinceId: 'province7', coordinates: [80.5, 29.3] }
-  ];
-
-  constructor() {
-    // Access token will be set when initializing the map
+  constructor(private queryParamService: QueryParamService) {
+    // Listen to country changes
+    this.queryParamService.country$.subscribe(country => {
+      this.currentCountry = country;
+      if (this.map) {
+        this.loadCountryData(country);
+      }
+    });
   }
 
   async initializeMap(containerId: string): Promise<mapboxgl.Map> {
@@ -144,8 +82,7 @@ export class MapboxService {
 
       this.map.on('load', () => {
         this.isInitialized = true;
-        this.addNepalBoundaries();
-        this.addProvinceLayers();
+        this.loadCountryData(this.currentCountry);
       });
 
       return this.map;
@@ -155,89 +92,202 @@ export class MapboxService {
     }
   }
 
-  private addNepalBoundaries() {
+
+  private loadCountryData(country: string) {
     if (!this.map) return;
 
-    // Add Nepal country boundary
-    this.map.addSource('nepal-boundary', {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: [{
-          type: 'Feature',
-          properties: { name: 'Nepal' },
-          geometry: {
-            type: 'Polygon',
-            coordinates: [[
-              [80.0, 26.0],
-              [88.5, 26.0],
-              [88.5, 30.5],
-              [80.0, 30.5],
-              [80.0, 26.0]
-            ]]
-          }
-        }]
-      }
+    // Clear existing layers
+    this.clearMapLayers();
+
+    const countryData = this.getCountryData(country);
+    console.log('countryData',countryData);
+    if (!countryData) return;
+
+    // Center map on country
+    this.map.flyTo({
+      center: countryData.center,
+      zoom: countryData.zoom,
+      duration: 1000
     });
 
+    // Load country-specific GeoJSON
+    this.loadCountryGeoJSON(countryData.geojsonFile, country);
+  }
+
+  private getCountryData(country: string): CountryData | null {
+    switch (country.toLowerCase()) {
+      case 'nepal':
+        return {
+          name: NEPAL_DATA.name,
+          center: NEPAL_DATA.center,
+          zoom: NEPAL_DATA.zoom,
+          bounds: NEPAL_DATA.bounds,
+          geojsonFile: NEPAL_DATA.geojsonFile
+        };
+      default:
+        return null;
+    }
+  }
+
+  private loadCountryGeoJSON(filename: string, country: string) {
+    console.log('filename',filename);
+    console.log('country',country);
+    fetch(`/assets/map-data/${country}/${filename}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log('data',data);
+        const sourceId = `${country}-boundaries`;
+        console.log('sourceId',sourceId);
+        this.map!.addSource(sourceId, {
+          type: 'geojson',
+          data: data
+        });
+
+        this.addCountryLayers(sourceId, country);
+      })
+      .catch(error => {
+        console.error(`Error loading ${country} data:`, error);
+      });
+  }
+
+  private addCountryLayers(sourceId: string, country: string) {
+    if (!this.map) return;
+
+    // Add fill layer
     this.map.addLayer({
-      id: 'nepal-boundary-fill',
+      id: `${country}-fill`,
       type: 'fill',
-      source: 'nepal-boundary',
+      source: sourceId,
       paint: {
-        'fill-color': '#e0f2fe',
-        'fill-opacity': 0.1
+        'fill-color': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          '#3b82f6',
+          '#60a5fa'
+        ],
+        'fill-opacity': 0.6
       }
     });
 
+    // Add stroke layer
     this.map.addLayer({
-      id: 'nepal-boundary-stroke',
+      id: `${country}-stroke`,
       type: 'line',
-      source: 'nepal-boundary',
+      source: sourceId,
       paint: {
-        'line-color': '#0ea5e9',
+        'line-color': '#1e40af',
         'line-width': 2
+      }
+    });
+
+    // Add labels
+    this.map.addLayer({
+      id: `${country}-labels`,
+      type: 'symbol',
+      source: sourceId,
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': 12,
+        'text-anchor': 'center'
+      },
+      paint: {
+        'text-color': '#1e40af',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 2
+      }
+    });
+
+    // Add click handlers
+    this.map.on('click', `${country}-fill`, (e) => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0];
+        const coordinates = e.lngLat;
+        
+        const props = feature.properties || {};
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`
+            <div class="map-popup">
+              <h3>${props['name'] || 'Unknown'}</h3>
+              <p>${props['nameNepali'] || props['nameHindi'] || ''}</p>
+              <p>Population: ${props['population']?.toLocaleString() || 'N/A'}</p>
+              <p>Area: ${props['area']?.toLocaleString() || 'N/A'} km²</p>
+            </div>
+          `)
+          .addTo(this.map!);
+      }
+    });
+
+    // Add hover effects
+    this.map.on('mouseenter', `${country}-fill`, () => {
+      this.map!.getCanvas().style.cursor = 'pointer';
+    });
+
+    this.map.on('mouseleave', `${country}-fill`, () => {
+      this.map!.getCanvas().style.cursor = '';
+    });
+  }
+
+  private clearMapLayers() {
+    if (!this.map) return;
+
+    // Remove existing layers
+    const layersToRemove = [
+      'nepal-fill', 'nepal-stroke', 'nepal-labels',
+      'india-fill', 'india-stroke', 'india-labels'
+    ];
+
+    layersToRemove.forEach(layerId => {
+      if (this.map!.getLayer(layerId)) {
+        this.map!.removeLayer(layerId);
+      }
+    });
+
+    // Remove existing sources
+    const sourcesToRemove = [
+      'nepal-boundaries', 'india-boundaries'
+    ];
+
+    sourcesToRemove.forEach(sourceId => {
+      if (this.map!.getSource(sourceId)) {
+        this.map!.removeSource(sourceId);
       }
     });
   }
 
   private addProvinceLayers() {
-    if (!this.map) return;
-
-    // Load official Nepal provinces GeoJSON data
-    fetch('/assets/data/nepal-provinces.geojson')
-      .then(response => response.json())
-      .then(data => {
-        // Transform the data to match our expected format
-        const transformedData = this.transformProvinceData(data);
-        
-        this.map!.addSource('nepal-provinces', {
-          type: 'geojson',
-          data: transformedData
-        });
-
-        this.addProvinceLayersToMap();
-      })
-      .catch(error => {
-        console.error('Error loading Nepal provinces data:', error);
-        // Fallback to simple rectangles
-        this.addFallbackProvinceLayers();
-      });
+    // This method is now replaced by loadCountryData
+    this.loadCountryData('nepal');
   }
 
   private transformProvinceData(data: any) {
     // Transform the official data to match our expected format
-    const transformedFeatures = data.features.map((feature: any) => ({
-      type: 'Feature' as const,
-      properties: {
-        id: `province${feature.properties.province}`,
+    const transformedFeatures = data.features.map((feature: any) => {
+      const provinceId = `province${feature.properties.province}`;
+      const province: NepalProvince = {
+        id: provinceId,
         name: feature.properties.pr_name,
         nameNepali: this.getNepaliName(feature.properties.province),
-        population: this.getProvincePopulation(feature.properties.province),
-        area: this.getProvinceArea(feature.properties.province)
-      },
-      geometry: feature.geometry
-    }));
+        coordinates: this.getProvinceCenter(feature.geometry),
+        bounds: this.getProvinceBounds(feature.geometry)
+      };
+      
+      // Store province data
+      this.provinces.push(province);
+      
+      return {
+        type: 'Feature' as const,
+        properties: {
+          id: provinceId,
+          name: feature.properties.pr_name,
+          nameNepali: this.getNepaliName(feature.properties.province),
+          population: this.getProvincePopulation(feature.properties.province),
+          area: this.getProvinceArea(feature.properties.province)
+        },
+        geometry: feature.geometry
+      };
+    });
 
     return {
       type: 'FeatureCollection' as const,
@@ -282,6 +332,48 @@ export class MapboxService {
       7: 19539
     };
     return areas[provinceNumber] || 0;
+  }
+
+  private getProvinceCenter(geometry: any): [number, number] {
+    // Calculate center from geometry bounds
+    if (geometry.type === 'MultiPolygon') {
+      const coords = geometry.coordinates[0][0];
+      let minLng = coords[0][0];
+      let maxLng = coords[0][0];
+      let minLat = coords[0][1];
+      let maxLat = coords[0][1];
+      
+      coords.forEach((coord: number[]) => {
+        minLng = Math.min(minLng, coord[0]);
+        maxLng = Math.max(maxLng, coord[0]);
+        minLat = Math.min(minLat, coord[1]);
+        maxLat = Math.max(maxLat, coord[1]);
+      });
+      
+      return [(minLng + maxLng) / 2, (minLat + maxLat) / 2];
+    }
+    return [84.1240, 28.3949]; // Default to Nepal center
+  }
+
+  private getProvinceBounds(geometry: any): [[number, number], [number, number]] {
+    // Calculate bounds from geometry
+    if (geometry.type === 'MultiPolygon') {
+      const coords = geometry.coordinates[0][0];
+      let minLng = coords[0][0];
+      let maxLng = coords[0][0];
+      let minLat = coords[0][1];
+      let maxLat = coords[0][1];
+      
+      coords.forEach((coord: number[]) => {
+        minLng = Math.min(minLng, coord[0]);
+        maxLng = Math.max(maxLng, coord[0]);
+        minLat = Math.min(minLat, coord[1]);
+        maxLat = Math.max(maxLat, coord[1]);
+      });
+      
+      return [[minLng, minLat], [maxLng, maxLat]];
+    }
+    return [[80.0, 26.0], [88.5, 30.5]]; // Default Nepal bounds
   }
 
   private addProvinceLayersToMap() {
@@ -366,36 +458,7 @@ export class MapboxService {
 
   private addFallbackProvinceLayers() {
     if (!this.map) return;
-
-    // Create GeoJSON for provinces (fallback)
-    const provinceFeatures = this.provinces.map(province => ({
-      type: 'Feature' as const,
-      properties: {
-        id: province.id,
-        name: province.name,
-        nameNepali: province.nameNepali
-      },
-      geometry: {
-        type: 'Polygon' as const,
-        coordinates: [[
-          [province.bounds[0][0], province.bounds[0][1]],
-          [province.bounds[1][0], province.bounds[0][1]],
-          [province.bounds[1][0], province.bounds[1][1]],
-          [province.bounds[0][0], province.bounds[1][1]],
-          [province.bounds[0][0], province.bounds[0][1]]
-        ]]
-      }
-    }));
-
-    this.map.addSource('nepal-provinces', {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: provinceFeatures
-      }
-    });
-
-    this.addProvinceLayersToMap();
+    console.log('Using fallback province layers');
   }
 
   filterByProvince(provinceId: string) {
@@ -474,6 +537,14 @@ export class MapboxService {
 
   getMap(): mapboxgl.Map | null {
     return this.map;
+  }
+
+  getProvinces(): NepalProvince[] {
+    return this.provinces;
+  }
+
+  getDistricts(): NepalDistrict[] {
+    return this.districts;
   }
 
   destroy() {

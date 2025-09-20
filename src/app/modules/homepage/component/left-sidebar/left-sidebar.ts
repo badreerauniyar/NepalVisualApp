@@ -1,7 +1,8 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MapboxService, NepalProvince, NepalDistrict } from '../../../../services/mapbox.service';
+import { QueryParamService } from '../../../../services/query-param.service';
 
 interface FilterOption {
   value: string;
@@ -14,7 +15,7 @@ interface FilterOption {
   templateUrl: './left-sidebar.html',
   styleUrl: './left-sidebar.scss'
 })
-export class LeftSidebar {
+export class LeftSidebar implements OnInit {
   @Output() filterChange = new EventEmitter<any>();
   @Output() populationToggle = new EventEmitter<boolean>();
   @Output() sidebarToggle = new EventEmitter<void>();
@@ -36,9 +37,36 @@ export class LeftSidebar {
   totalPopulation = '29.1M';
   selectedArea = '147,181';
 
-  constructor(private mapboxService: MapboxService) {
-    // Initialize with Nepal data
-    this.provinces = this.mapboxService.provinces;
+  constructor(
+    private mapboxService: MapboxService,
+    private queryParamService: QueryParamService
+  ) {
+    // Provinces will be loaded dynamically from GeoJSON
+  }
+
+  ngOnInit() {
+    // Listen to country changes
+    this.queryParamService.country$.subscribe(country => {
+      this.selectedCountry = country;
+      this.updateProvincesForCountry(country);
+    });
+
+    // Load initial data
+    this.updateProvincesForCountry(this.queryParamService.getCurrentCountry());
+  }
+
+  private updateProvincesForCountry(country: string) {
+    switch (country.toLowerCase()) {
+      case 'nepal':
+        this.provinces = this.mapboxService.getProvinces();
+        break;
+      case 'india':
+        // For India, we'll use states instead of provinces
+        this.provinces = [];
+        break;
+      default:
+        this.provinces = [];
+    }
   }
 
   onCountryChange() {
@@ -47,6 +75,10 @@ export class LeftSidebar {
     this.selectedMunicipality = '';
     this.districts = [];
     this.municipalities = [];
+    
+    // Update query parameter
+    this.queryParamService.setCountry(this.selectedCountry);
+    
     this.emitFilterChange();
   }
 
