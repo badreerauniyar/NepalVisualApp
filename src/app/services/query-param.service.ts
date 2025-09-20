@@ -43,7 +43,6 @@ export class QueryParamService {
       const ward = params['ward'] || '';
 
       // Only emit if values have changed to prevent unnecessary updates
-      console.log(this.countrySubject.value)
       if (this.countrySubject.value !== country) {
         this.countrySubject.next(country);
       }
