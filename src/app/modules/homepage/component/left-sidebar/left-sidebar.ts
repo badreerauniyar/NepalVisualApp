@@ -2,7 +2,7 @@ import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { QueryParamService } from '../../../../services/query-param.service';
-import { INDIA_DATA } from '../../../../../assets/constants/india';
+import { MapboxService, ProvinceSelection } from '../../../../services/mapbox.service';
 import * as nepalData from '../../../../../assets/constants/nepal-data.json';
 
 
@@ -69,13 +69,17 @@ export class LeftSidebar implements OnInit {
   municipalities: Municipality[] = [];
   wards: Ward[] = [];
 
+  // Mapbox service data - only for display when province is selected
+  selectedMapboxProvince: ProvinceSelection | null = null;
+
   // Stats (mock data)
   totalSchools = '2,847';
   totalPopulation = '29.1M';
   selectedArea = '147,181';
 
   constructor(
-    private queryParamService: QueryParamService
+    private queryParamService: QueryParamService,
+    private mapboxService: MapboxService
   ) {
     // Data will be loaded from constants files based on selected country
   }
@@ -108,6 +112,11 @@ export class LeftSidebar implements OnInit {
     this.queryParamService.ward$.subscribe(ward => {
       this.selectedWard = ward;
       this.emitFilterChange();
+    });
+
+    // Subscribe to selected province from Mapbox service (driven by query params)
+    this.mapboxService.selectedProvince$.subscribe(province => {
+      this.selectedMapboxProvince = province;
     });
   }
   
@@ -143,6 +152,11 @@ export class LeftSidebar implements OnInit {
     this.queryParamService.setProvince(this.selectedProvince);
     this.loadDistrictsForProvince();
     this.emitFilterChange();
+  }
+
+  // Method to deselect province (clears query param)
+  onMapboxProvinceDeselect() {
+    this.queryParamService.setProvince('');
   }
 
   private loadDistrictsForProvince() {

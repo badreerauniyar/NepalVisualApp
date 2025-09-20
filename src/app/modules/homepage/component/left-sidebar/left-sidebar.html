@@ -79,6 +79,35 @@
     </div>
   </div>
 
+  <!-- Selected Province Information -->
+  <div class="filter-section" *ngIf="selectedMapboxProvince">
+    <div class="filter-header">
+      <h3 class="filter-title">Selected Province</h3>
+    </div>
+    
+    <div class="province-selection">
+      <div class="province-item selected">
+        <div class="province-info">
+          <h4 class="province-name">{{ selectedMapboxProvince.name }}</h4>
+          <p class="province-local">{{ selectedMapboxProvince.localName }}</p>
+          <div class="province-stats">
+            <span class="stat">Population: {{ selectedMapboxProvince.population.toLocaleString() }}</span>
+            <span class="stat">Area: {{ selectedMapboxProvince.area.toLocaleString() }} km²</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="province-actions">
+        <button 
+          class="btn btn-secondary btn-sm" 
+          (click)="onMapboxProvinceDeselect()"
+        >
+          Deselect Province
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Population Layer Toggle -->
   <div class="filter-section">
     <div class="filter-header">

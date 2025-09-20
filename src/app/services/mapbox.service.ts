@@ -3,6 +3,7 @@ import { environment } from '../../environments/environment';
 import * as mapboxgl from 'mapbox-gl';
 import { QueryParamService } from './query-param.service';
 import { NEPAL_DATA } from '../../assets/constants/nepal';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 export interface country {
   id: string;
@@ -48,6 +49,16 @@ export interface MapFilter {
   municipality?: string;
 }
 
+export interface ProvinceSelection {
+  id: string;
+  name: string;
+  localName: string;
+  population: number;
+  area: number;
+  center: [number, number];
+  geojsonFile: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -58,14 +69,37 @@ export class MapboxService {
   private provinces: province[] = [];
   private districts: district[] = [];
   private localLevels: localLevel[] = [];
-  private currentCountry :string= '';
+  private currentCountry: string = '';
+  private currentProvince: string = '';
+
+  // BehaviorSubjects for reactive data
+  private provincesSubject = new BehaviorSubject<ProvinceSelection[]>([]);
+  private selectedProvinceSubject = new BehaviorSubject<ProvinceSelection | null>(null);
+
+  // Public observables
+  public provinces$ = this.provincesSubject.asObservable();
+  public selectedProvince$ = this.selectedProvinceSubject.asObservable();
 
   constructor(private queryParamService: QueryParamService) {
     // Listen to country changes
     this.queryParamService.country$.subscribe(country => {
       this.currentCountry = country;
-      if (this.map && this.currentCountry ) {
+      if (this.map && this.currentCountry) {
         this.loadCountryData(country);
+        // this.loadProvincesData();
+      }
+    });
+
+    // Listen to province changes from query parameters
+    this.queryParamService.province$.subscribe(provinceId => {
+      if (provinceId && this.map && this.currentCountry) {
+        // Convert numeric province ID to province data ID format
+        const mappedProvinceId = this.mapProvinceId(provinceId);
+        if (mappedProvinceId) {
+          this.selectProvince(mappedProvinceId);
+        }
+      } else if (!provinceId) {
+        this.deselectProvince();
       }
     });
   }
@@ -121,6 +155,40 @@ export class MapboxService {
     this.loadCountryGeoJSON(countryData.geojsonFile, country);
   }
 
+  private loadProvincesData() {
+    if (!this.currentCountry) return;
+    
+    const provincesData = NEPAL_DATA.provinces.map(province => ({
+      id: province.id,
+      name: province.name,
+      localName: province.nameNepali,
+      population: province.population,
+      area: province.area,
+      center: [84.1240, 28.3949] as [number, number], // Default center, will be updated from GeoJSON
+      geojsonFile: this.getProvinceGeoJSONFileName(province.id, province.name)
+    }));
+
+    this.provincesSubject.next(provincesData);
+  }
+
+  private getProvinceGeoJSONFileName(provinceId: string, provinceName: string): string {
+    // Convert province name to lowercase and create filename
+    // Example: "Bagmati Province" -> "bagmati_province_3"
+    const nameLower = provinceName.toLowerCase().replace(/\s+/g, '_');
+    const id = provinceId.replace('province', '');
+    return `${nameLower}_${id}.geojson`;
+  }
+
+  private mapProvinceId(queryParamId: string): string | null {
+    // Map numeric province ID from query params to province data ID format
+    // Query param: "1" -> Province data: "province1"
+    const numericId = parseInt(queryParamId);
+    if (isNaN(numericId) || numericId < 1 || numericId > 7) {
+      return null;
+    }
+    return `province${numericId}`;
+  }
+
   private getCountryData(country: string): country | null {
     console.log(country)
     if(!country) return null
@@ -160,6 +228,71 @@ export class MapboxService {
       .catch(error => {
         console.error(`Error loading ${country} data:`, error);
       });
+  }
+
+  public selectProvince(provinceId: string) {
+    if (!this.map || !this.currentCountry) return;
+
+    const province = this.provincesSubject.value.find(p => p.id === provinceId);
+    if (!province) return;
+
+    this.currentProvince = provinceId;
+    this.selectedProvinceSubject.next(province);
+
+    // Clear existing province layers
+    this.clearProvinceLayers();
+
+    // Load province GeoJSON
+    this.loadProvinceGeoJSON(province.geojsonFile, province);
+  }
+
+  private loadProvinceGeoJSON(filename: string, province: ProvinceSelection) {
+    const filePath = `/assets/map-data/${this.currentCountry}/maps-of-nepal/maps-of-provinces/${filename}`;
+    
+    fetch(filePath)
+      .then(response => response.json())
+      .then(data => {
+        console.log('province map data', data);
+        const sourceId = `province-${province.id}`;
+        
+        this.map!.addSource(sourceId, {
+          type: 'geojson',
+          data: data
+        });
+
+        this.addProvinceLayers(sourceId, province);
+        
+        // Center map on province
+        this.map!.fitBounds(this.getBoundsFromGeoJSON(data), {
+          padding: 50,
+          duration: 1000
+        });
+      })
+      .catch(error => {
+        console.error(`Error loading province ${province.name} data:`, error);
+      });
+  }
+
+  private getBoundsFromGeoJSON(geojson: any): mapboxgl.LngLatBounds {
+    const bounds = new mapboxgl.LngLatBounds();
+    
+    if (geojson.type === 'FeatureCollection') {
+      geojson.features.forEach((feature: any) => {
+        if (feature.geometry.type === 'Polygon') {
+          feature.geometry.coordinates[0].forEach((coord: [number, number]) => {
+            bounds.extend(coord);
+          });
+        } else if (feature.geometry.type === 'MultiPolygon') {
+          feature.geometry.coordinates.forEach((polygon: any) => {
+            polygon[0].forEach((coord: [number, number]) => {
+              bounds.extend(coord);
+            });
+          });
+        }
+      });
+    }
+    
+    return bounds;
   }
 
   private addCountryLayers(sourceId: string, country: string) {
@@ -241,6 +374,85 @@ export class MapboxService {
     });
   }
 
+  private addProvinceLayers(sourceId: string, province: ProvinceSelection) {
+    if (!this.map) return;
+
+    // Add fill layer
+    this.map.addLayer({
+      id: `province-${province.id}-fill`,
+      type: 'fill',
+      source: sourceId,
+      paint: {
+        'fill-color': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          '#10b981',
+          '#34d399'
+        ],
+        'fill-opacity': 0.7
+      }
+    });
+
+    // Add stroke layer
+    this.map.addLayer({
+      id: `province-${province.id}-stroke`,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#059669',
+        'line-width': 3
+      }
+    });
+
+    // Add labels
+    this.map.addLayer({
+      id: `province-${province.id}-labels`,
+      type: 'symbol',
+      source: sourceId,
+      layout: {
+        'text-field': ['get', 'name'],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': 14,
+        'text-anchor': 'center'
+      },
+      paint: {
+        'text-color': '#059669',
+        'text-halo-color': '#ffffff',
+        'text-halo-width': 2
+      }
+    });
+
+    // Add click handlers
+    this.map.on('click', `province-${province.id}-fill`, (e) => {
+      if (e.features && e.features.length > 0) {
+        const feature = e.features[0];
+        const coordinates = e.lngLat;
+        
+        const props = feature.properties || {};
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(`
+            <div class="map-popup">
+              <h3>${province.name}</h3>
+              <p>${province.localName}</p>
+              <p>Population: ${province.population.toLocaleString()}</p>
+              <p>Area: ${province.area.toLocaleString()} km²</p>
+            </div>
+          `)
+          .addTo(this.map!);
+      }
+    });
+
+    // Add hover effects
+    this.map.on('mouseenter', `province-${province.id}-fill`, () => {
+      this.map!.getCanvas().style.cursor = 'pointer';
+    });
+
+    this.map.on('mouseleave', `province-${province.id}-fill`, () => {
+      this.map!.getCanvas().style.cursor = '';
+    });
+  }
+
   private clearMapLayers() {
     if (!this.map) return;
 
@@ -262,6 +474,34 @@ export class MapboxService {
     ];
 
     sourcesToRemove.forEach(sourceId => {
+      if (this.map!.getSource(sourceId)) {
+        this.map!.removeSource(sourceId);
+      }
+    });
+
+    // Clear province layers
+    this.clearProvinceLayers();
+  }
+
+  private clearProvinceLayers() {
+    if (!this.map) return;
+
+    // Remove all province layers
+    const provinceLayers = this.map.getStyle().layers
+      .filter(layer => layer.id.includes('province-'))
+      .map(layer => layer.id);
+
+    provinceLayers.forEach(layerId => {
+      if (this.map!.getLayer(layerId)) {
+        this.map!.removeLayer(layerId);
+      }
+    });
+
+    // Remove all province sources
+    const provinceSources = Object.keys(this.map.getStyle().sources)
+      .filter(sourceId => sourceId.includes('province-'));
+
+    provinceSources.forEach(sourceId => {
       if (this.map!.getSource(sourceId)) {
         this.map!.removeSource(sourceId);
       }
@@ -317,17 +557,35 @@ export class MapboxService {
     return this.map;
   }
 
- 
+  // Public methods for province management
+  public getProvinces(): ProvinceSelection[] {
+    return this.provincesSubject.value;
+  }
 
-    getDistricts(): district[] {
-      return this.districts;
+  public getSelectedProvince(): ProvinceSelection | null {
+    return this.selectedProvinceSubject.value;
+  }
+
+  public deselectProvince() {
+    this.currentProvince = '';
+    this.selectedProvinceSubject.next(null);
+    this.clearProvinceLayers();
+    
+    // Reset to country view
+    if (this.currentCountry) {
+      this.loadCountryData(this.currentCountry);
     }
-    getLocalLevels(): localLevel[] {
-      return this.localLevels;
-    }
-    getCountries(): country[] {
-      return this.countries;
-    }
+  }
+
+  getDistricts(): district[] {
+    return this.districts;
+  }
+  getLocalLevels(): localLevel[] {
+    return this.localLevels;
+  }
+  getCountries(): country[] {
+    return this.countries;
+  }
 
   destroy() {
     if (this.map) {
