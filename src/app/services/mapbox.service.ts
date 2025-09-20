@@ -212,8 +212,7 @@ export class MapboxService {
       
       case 'municipality':
         const cleanName = name.replace(/\s+municipality$/i, '');
-        const cleanNameLower = cleanName.toLowerCase().replace(/\s+/g, '_');
-        return `${cleanNameLower}.geojson`;
+        return `${cleanName}.geojson`;
       
       default:
         return `${nameLower}.geojson`;
