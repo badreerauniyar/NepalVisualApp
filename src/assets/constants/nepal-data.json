@@ -3,7 +3,7 @@
     "states": [
       {
         "id": 1,
-        "name": "Koshi Province",
+        "name": "Koshi ",
         "area_sq_km": "25906",
         "website": "https://koshi.gov.np/",
         "headquarter": "Biratnagar",
@@ -1385,7 +1385,7 @@
       },
       {
         "id": 2,
-        "name": "Madhesh Province",
+        "name": "Madhesh ",
         "area_sq_km": "9661",
         "website": "https://madhesh.gov.np/",
         "headquarter": "Janakpur",
