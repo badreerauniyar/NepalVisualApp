@@ -35,12 +35,32 @@ export class QueryParamService {
   }
 
   private updateAllFromQuery() {
+    console.log('updateAllFromQuery')
     this.route.queryParams.subscribe(params => {
-      this.countrySubject.next(params['country'] || '');
-      this.provinceSubject.next(params['province'] || '');
-      this.districtSubject.next(params['district'] || '');
-      this.municipalitySubject.next(params['municipality'] || '');
-      this.wardSubject.next(params['ward'] || '');
+    console.log('updateAllFromQuery',params)
+      const country = params['country'] || '';
+      const province = params['province'] || '';
+      const district = params['district'] || '';
+      const municipality = params['municipality'] || '';
+      const ward = params['ward'] || '';
+
+      // Only emit if values have changed to prevent unnecessary updates
+      console.log(this.countrySubject.value)
+      if (this.countrySubject.value !== country) {
+        this.countrySubject.next(country);
+      }
+      if (this.provinceSubject.value !== province) {
+        this.provinceSubject.next(province);
+      }
+      if (this.districtSubject.value !== district) {
+        this.districtSubject.next(district);
+      }
+      if (this.municipalitySubject.value !== municipality) {
+        this.municipalitySubject.next(municipality);
+      }
+      if (this.wardSubject.value !== ward) {
+        this.wardSubject.next(ward);
+      }
     });
   }
 
@@ -55,6 +75,7 @@ export class QueryParamService {
   }
 
   setProvince(province: string) {
+    this.provinceSubject.next(province);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { 
@@ -65,6 +86,7 @@ export class QueryParamService {
   }
 
   setDistrict(district: string) {
+    this.districtSubject.next(district);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { 
@@ -75,6 +97,7 @@ export class QueryParamService {
   }
 
   setMunicipality(municipality: string) {
+    this.municipalitySubject.next(municipality);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { 
@@ -85,6 +108,7 @@ export class QueryParamService {
   }
 
   setWard(ward: string) {
+    this.wardSubject.next(ward);
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { ward: ward },

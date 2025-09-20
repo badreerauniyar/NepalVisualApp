@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header',
@@ -13,6 +14,12 @@ export class Header {
   @Output() searchQuery = new EventEmitter<string>();
 
   searchValue = '';
+
+  constructor(private router: Router) {}
+
+  navigateToHome() {
+    this.router.navigate(['/']);
+  }
 
   clearSearch() {
     this.searchValue = '';

@@ -174,7 +174,7 @@ export class Homepage implements OnInit, OnDestroy {
 
   // Handle filter changes from left sidebar
   onFilterChange(filter: MapFilter) {
-    console.log('Filter changed:', filter);
+    // console.log('Filter changed:', filter);
     
     if (filter.province) {
       // this.mapboxService.filterByProvince(filter.province);

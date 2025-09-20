@@ -83,38 +83,31 @@ export class LeftSidebar implements OnInit {
   ngOnInit() {
     // Listen to all parameter changes
     this.queryParamService.country$.subscribe(country => {
-      if(country !== this.selectedCountry){
-        this.selectedCountry = country;
-        this.loadStateData(this.selectedCountry);
-      }
+      this.selectedCountry = country;
+      this.loadStateData(this.selectedCountry);
     });
 
     this.queryParamService.province$.subscribe(province => {
-      if(province !== this.selectedProvince){
-        this.selectedProvince = province;
-        this.onProvinceChange();
-      }
+      this.selectedProvince = province;
+      this.loadDistrictsForProvince();
+      this.emitFilterChange();
     });
 
     this.queryParamService.district$.subscribe(district => {
-      if(district !== this.selectedDistrict){
-        this.selectedDistrict = district;
-        this.onDistrictChange();
-      }
+      this.selectedDistrict = district;
+      this.loadMunicipalitiesForDistrict();
+      this.emitFilterChange();
     });
 
     this.queryParamService.municipality$.subscribe(municipality => {
-      if(municipality !== this.selectedMunicipality){
-        this.selectedMunicipality = municipality;
-        this.onMunicipalityChange();
-      }
+      this.selectedMunicipality = municipality;
+      this.loadWardsForMunicipality();
+      this.emitFilterChange();
     });
 
     this.queryParamService.ward$.subscribe(ward => {
-      if(ward !== this.selectedWard){
-        this.selectedWard = ward;
-        this.onWardChange();
-      }
+      this.selectedWard = ward;
+      this.emitFilterChange();
     });
   }
   
@@ -134,6 +127,7 @@ export class LeftSidebar implements OnInit {
           headquarter: state.headquarter,
           districts: [] // Empty array - districts will be loaded when needed
         }));
+        console.log(this.provinces)
         break;
       case 'india':
         this.provinces = INDIA_DATA.states.map(state => ({
@@ -173,7 +167,11 @@ export class LeftSidebar implements OnInit {
 
   onProvinceChange() {
     this.queryParamService.setProvince(this.selectedProvince);
-    
+    this.loadDistrictsForProvince();
+    this.emitFilterChange();
+  }
+
+  private loadDistrictsForProvince() {
     // Get districts for selected province from constants data
     if (this.selectedProvince) {
       // Load districts dynamically from nepalData
@@ -194,13 +192,15 @@ export class LeftSidebar implements OnInit {
     } else {
       this.districts = [];
     }
-    
-    this.emitFilterChange();
   }
 
   onDistrictChange() {
     this.queryParamService.setDistrict(this.selectedDistrict);
-    
+    this.loadMunicipalitiesForDistrict();
+    this.emitFilterChange();
+  }
+
+  private loadMunicipalitiesForDistrict() {
     // Get municipalities for selected district from constants data
     if (this.selectedDistrict) {
       // Load municipalities dynamically from nepalData
@@ -222,13 +222,15 @@ export class LeftSidebar implements OnInit {
     } else {
       this.municipalities = [];
     }
-    
-    this.emitFilterChange();
   }
 
   onMunicipalityChange() {
     this.queryParamService.setMunicipality(this.selectedMunicipality);
-    
+    this.loadWardsForMunicipality();
+    this.emitFilterChange();
+  }
+
+  private loadWardsForMunicipality() {
     // Get wards for selected municipality
     if (this.selectedMunicipality) {
       // Load wards dynamically from nepalData
@@ -242,8 +244,6 @@ export class LeftSidebar implements OnInit {
     } else {
       this.wards = [];
     }
-    
-    this.emitFilterChange();
   }
 
   onWardChange() {
