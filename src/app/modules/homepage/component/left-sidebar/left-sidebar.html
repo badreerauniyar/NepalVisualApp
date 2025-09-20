@@ -27,7 +27,7 @@
     <div class="filter-group">
       <label class="filter-label">Country</label>
       <select class="filter-select" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
-        <option value="">Select a country</option>
+        <option value="" [selected]="!selectedCountry">Select a country</option>
         <option value="nepal">Nepal</option>
         <option value="india">India</option>
         <option value="china">China</option>

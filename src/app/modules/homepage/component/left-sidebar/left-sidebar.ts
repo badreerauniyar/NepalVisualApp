@@ -77,9 +77,8 @@ export class LeftSidebar implements OnInit {
   ngOnInit() {
     // Listen to country changes
     this.queryParamService.country$.subscribe(country => {
-      console.log(country)
-      this.selectedCountry = country;
-      if(this.selectedCountry){
+      if(country){
+        this.selectedCountry=country
         this.loadCountryMap(this.selectedCountry)
       }
     });
