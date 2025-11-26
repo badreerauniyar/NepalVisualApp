@@ -1,0 +1,180 @@
+<aside class="right-sidebar-content">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+    <h2 class="sidebar-title">Thematic Filters</h2>
+    <button class="sidebar-toggle d-md-none" (click)="toggleSidebar()" type="button">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Category Selector -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <h3 class="filter-title">Categories</h3>
+    </div>
+    
+    <div class="category-tabs">
+      <button 
+        *ngFor="let category of categories" 
+        class="category-tab"
+        [class.active]="selectedCategory === category.value"
+        (click)="selectCategory(category.value)"
+        type="button"
+      >
+        <svg class="category-icon" [innerHTML]="category.icon" width="20" height="20"></svg>
+        <span class="category-text">{{ category.name }}</span>
+        <span class="category-count">{{ category.count }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Dynamic Sub-Filters -->
+  <div class="filter-section" *ngIf="selectedCategory">
+    <div class="filter-header">
+      <h3 class="filter-title">{{ getCategoryTitle() }} Filters</h3>
+      <button class="filter-reset" (click)="resetCategoryFilters()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        Reset
+      </button>
+    </div>
+
+    <!-- Schools Filters -->
+    <div *ngIf="selectedCategory === 'schools'" class="sub-filters">
+      <!-- School Type Filter -->
+      <div class="filter-group">
+        <label class="filter-label">School Type</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item" *ngFor="let type of schoolTypes">
+            <input 
+              type="checkbox" 
+              class="checkbox-input"
+              [value]="type.value"
+              [checked]="isSchoolTypeSelected(type.value)"
+              (change)="toggleSchoolType(type.value)"
+            />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">{{ type.name }}</span>
+            <span class="checkbox-count">({{ type.count }})</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- School Level Filter -->
+      <div class="filter-group">
+        <label class="filter-label">School Level</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item" *ngFor="let level of schoolLevels">
+            <input 
+              type="checkbox" 
+              class="checkbox-input"
+              [value]="level.value"
+              [checked]="isSchoolLevelSelected(level.value)"
+              (change)="toggleSchoolLevel(level.value)"
+            />
+            <span class="checkbox-custom"></span>
+            <span class="checkbox-text">{{ level.name }}</span>
+            <span class="checkbox-count">({{ level.count }})</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hospitals Filters (Phase 2) -->
+    <div *ngIf="selectedCategory === 'hospitals'" class="sub-filters">
+      <div class="coming-soon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M9 12l2 2 4-4"/>
+          <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+          <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+          <path d="M13 12h3a2 2 0 0 1 2 2v1"/>
+          <path d="M11 12H8a2 2 0 0 0-2 2v1"/>
+        </svg>
+        <h4>Coming in Phase 2</h4>
+        <p>Hospital filters will be available in the next release</p>
+      </div>
+    </div>
+
+    <!-- Roads Filters (Phase 2) -->
+    <div *ngIf="selectedCategory === 'roads'" class="sub-filters">
+      <div class="coming-soon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M9 12l2 2 4-4"/>
+          <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+          <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+          <path d="M13 12h3a2 2 0 0 1 2 2v1"/>
+          <path d="M11 12H8a2 2 0 0 0-2 2v1"/>
+        </svg>
+        <h4>Coming in Phase 2</h4>
+        <p>Road filters will be available in the next release</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map Controls -->
+  <div class="filter-section">
+    <div class="filter-header">
+      <h3 class="filter-title">Map Controls</h3>
+    </div>
+    
+    <div class="map-controls">
+      <button class="control-btn" (click)="resetMapView()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+          <path d="M21 3v5h-5"/>
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+          <path d="M3 21v-5h5"/>
+        </svg>
+        Reset View
+      </button>
+      
+      <button class="control-btn" (click)="toggleFullscreen()" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        Fullscreen
+      </button>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="filter-section" *ngIf="selectedCategory">
+    <div class="filter-header">
+      <h3 class="filter-title">Legend</h3>
+    </div>
+    
+    <div class="legend" *ngIf="selectedCategory === 'schools'">
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #3b82f6;"></div>
+        <span class="legend-text">Public Schools</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #10b981;"></div>
+        <span class="legend-text">Private Schools</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #f59e0b;"></div>
+        <span class="legend-text">Primary Level</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background-color: #ef4444;"></div>
+        <span class="legend-text">Secondary Level</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collapse/Expand Button for Mobile -->
+  <div class="sidebar-footer d-md-none">
+    <button class="collapse-btn" (click)="toggleSidebar()" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      Collapse
+    </button>
+  </div>
+</aside>

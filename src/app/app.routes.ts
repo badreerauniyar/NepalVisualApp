@@ -7,6 +7,11 @@ export const routes: Routes = [
     title: 'Nepal Visual - Geographic & School Mapping'
   },
   {
+    path: 'voter-list',
+    loadChildren: () => import('./modules/voter-list/voter-list-module').then(m => m.VoterListModule),
+    title: 'Nepal Visual - Geographic & School Mapping'
+  },
+  {
     path: 'home',
     redirectTo: '',
     pathMatch: 'full'
