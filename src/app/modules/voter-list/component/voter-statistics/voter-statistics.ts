@@ -2,6 +2,7 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges, ChangeDetectorRef, 
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { Voter } from '../voter-table/voter-table';
+import { NameAnalysisService } from '../../../../services/name-analysis.service';
 
 Chart.register(...registerables);
 
@@ -26,6 +27,10 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
   ageGenderChart: Chart | null = null;
   maritalStatusChart: Chart | null = null;
   agePyramidChart: Chart | null = null;
+  religionPieChart: Chart | null = null;
+  religionBarChart: Chart | null = null;
+  castePieChart: Chart | null = null;
+  casteBarChart: Chart | null = null;
 
   // Age groups
   ageGroups: AgeGroup[] = [
@@ -42,8 +47,13 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
   ageGroupStats: { [key: string]: number } = {};
   maritalStats: { married: number; single: number } = { married: 0, single: 0 };
   ageGenderStats: { [key: string]: { male: number; female: number } } = {};
+  religionStats: { [key: string]: number } = {};
+  casteStats: { [key: string]: number } = {};
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private nameAnalysisService: NameAnalysisService
+  ) {}
 
   ngOnInit() {
     this.processData();
@@ -68,6 +78,8 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     this.ageGroupStats = {};
     this.maritalStats = { married: 0, single: 0 };
     this.ageGenderStats = {};
+    this.religionStats = {};
+    this.casteStats = {};
 
     // Initialize age groups
     this.ageGroups.forEach(group => {
@@ -108,6 +120,21 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
       } else {
         this.maritalStats.single++;
       }
+
+      // Religion and Caste analysis from name
+      const analysis = this.nameAnalysisService.analyzeVoter({
+        full_name: voter.full_name,
+        full_name_english: voter.full_name_english,
+        father_mother_name: voter.father_mother_name
+      });
+
+      // Count religion
+      const religion = analysis.religion;
+      this.religionStats[religion] = (this.religionStats[religion] || 0) + 1;
+
+      // Count caste
+      const caste = analysis.caste;
+      this.casteStats[caste] = (this.casteStats[caste] || 0) + 1;
     });
   }
 
@@ -129,6 +156,10 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
       this.createAgeGenderChart();
       this.createMaritalStatusChart();
       this.createAgePyramidChart();
+      this.createReligionPieChart();
+      this.createReligionBarChart();
+      this.createCastePieChart();
+      this.createCasteBarChart();
     }, 50);
   }
 
@@ -152,6 +183,22 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     if (this.agePyramidChart) {
       this.agePyramidChart.destroy();
       this.agePyramidChart = null;
+    }
+    if (this.religionPieChart) {
+      this.religionPieChart.destroy();
+      this.religionPieChart = null;
+    }
+    if (this.religionBarChart) {
+      this.religionBarChart.destroy();
+      this.religionBarChart = null;
+    }
+    if (this.castePieChart) {
+      this.castePieChart.destroy();
+      this.castePieChart = null;
+    }
+    if (this.casteBarChart) {
+      this.casteBarChart.destroy();
+      this.casteBarChart = null;
     }
   }
 
@@ -386,6 +433,197 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     };
 
     this.agePyramidChart = new Chart(ctx, config);
+  }
+
+  createReligionPieChart() {
+    const ctx = document.getElementById('religionPieChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const labels = Object.keys(this.religionStats).filter(key => this.religionStats[key] > 0);
+    const data = labels.map(label => this.religionStats[label]);
+
+    if (labels.length === 0) return;
+
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6b7280'];
+    
+    const config: ChartConfiguration = {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          title: {
+            display: true,
+            text: 'Religion Distribution / धर्म वितरण (Pie Chart)'
+          }
+        }
+      }
+    };
+
+    this.religionPieChart = new Chart(ctx, config);
+  }
+
+  createReligionBarChart() {
+    const ctx = document.getElementById('religionBarChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const labels = Object.keys(this.religionStats)
+      .filter(key => this.religionStats[key] > 0)
+      .sort((a, b) => this.religionStats[b] - this.religionStats[a]);
+    const data = labels.map(label => this.religionStats[label]);
+
+    if (labels.length === 0) return;
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Voters',
+          data: data,
+          backgroundColor: '#8b5cf6',
+          borderColor: '#7c3aed',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: 'Religion Distribution / धर्म वितरण (Bar Chart)'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    };
+
+    this.religionBarChart = new Chart(ctx, config);
+  }
+
+  createCastePieChart() {
+    const ctx = document.getElementById('castePieChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const labels = Object.keys(this.casteStats)
+      .filter(key => this.casteStats[key] > 0)
+      .sort((a, b) => this.casteStats[b] - this.casteStats[a])
+      .slice(0, 10); // Top 10 castes
+    const data = labels.map(label => this.casteStats[label]);
+
+    if (labels.length === 0) return;
+
+    const colors = [
+      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+      '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+    ];
+
+    const config: ChartConfiguration = {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          title: {
+            display: true,
+            text: 'Caste Distribution / जाति वितरण (Pie Chart - Top 10)'
+          }
+        }
+      }
+    };
+
+    this.castePieChart = new Chart(ctx, config);
+  }
+
+  createCasteBarChart() {
+    const ctx = document.getElementById('casteBarChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const labels = Object.keys(this.casteStats)
+      .filter(key => this.casteStats[key] > 0)
+      .sort((a, b) => this.casteStats[b] - this.casteStats[a])
+      .slice(0, 15); // Top 15 castes
+    const data = labels.map(label => this.casteStats[label]);
+
+    if (labels.length === 0) return;
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Voters',
+          data: data,
+          backgroundColor: '#10b981',
+          borderColor: '#059669',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: 'Caste Distribution / जाति वितरण (Bar Chart - Top 15)'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          },
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          }
+        }
+      }
+    };
+
+    this.casteBarChart = new Chart(ctx, config);
   }
 
   ngOnDestroy() {
