@@ -6,7 +6,12 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "scrape": "node scripts/scrape-to-json.js",
+    "extract-ward": "node scripts/extract-ward-data.js",
+    "import-supabase": "node scripts/import-to-supabase.js",
+    "import-ward": "node scripts/import-ward-to-supabase.js",
+    "extract-and-import": "node scripts/extract-and-import-ward.js"
   },
   "prettier": {
     "printWidth": 100,
@@ -28,8 +33,10 @@
     "@angular/forms": "^20.3.0",
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
+    "@supabase/supabase-js": "^2.86.0",
     "@types/mapbox-gl": "^3.4.1",
     "bootstrap": "^5.3.8",
+    "chart.js": "^4.5.1",
     "mapbox-gl": "^3.15.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"

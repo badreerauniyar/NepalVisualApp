@@ -1,0 +1,247 @@
+.voter-table-container {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+
+  .filters-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+
+    .search-bar {
+      margin-bottom: 1rem;
+
+      input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.95rem;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+      }
+    }
+
+    .filter-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        
+        select, input, button {
+          width: 100%;
+        }
+      }
+
+      select, input {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        min-width: 150px;
+
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+      }
+
+      button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        background-color: #6c757d;
+        color: white;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #5a6268;
+        }
+      }
+    }
+  }
+
+  .results-info {
+    margin-bottom: 1rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+
+    @media (max-width: 768px) {
+      font-size: 0.85rem;
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    thead {
+      background-color: #f8f9fa;
+
+      th {
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+        white-space: nowrap;
+
+        &.sortable {
+          cursor: pointer;
+          user-select: none;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: #e9ecef;
+          }
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        border-bottom: 1px solid #dee2e6;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #f8f9fa;
+        }
+
+        td {
+          padding: 0.75rem;
+          vertical-align: middle;
+
+          @media (max-width: 768px) {
+            padding: 0.5rem;
+          }
+        }
+      }
+    }
+
+    .voter-name {
+      strong {
+        display: block;
+        color: #333;
+      }
+
+      small {
+        font-size: 0.85rem;
+        color: #6c757d;
+      }
+    }
+
+    .spouse-name {
+      color: #333;
+      font-size: 0.9rem;
+
+      small {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: block;
+        margin-top: 0.25rem;
+      }
+    }
+
+    .parent-name {
+      color: #333;
+      font-size: 0.9rem;
+
+      small {
+        font-size: 0.85rem;
+        color: #6c757d;
+        display: block;
+        margin-top: 0.25rem;
+      }
+    }
+  }
+
+  .pagination-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .pagination-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        justify-content: center;
+        width: 100%;
+      }
+
+      button {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #007bff;
+        border-radius: 4px;
+        background-color: white;
+        color: #007bff;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+        min-width: 40px;
+
+        &:hover:not(:disabled) {
+          background-color: #007bff;
+          color: white;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        &.btn-primary {
+          background-color: #007bff;
+          color: white;
+        }
+      }
+
+      .pagination-ellipsis {
+        padding: 0.5rem;
+        color: #6c757d;
+      }
+    }
+  }
+}
+

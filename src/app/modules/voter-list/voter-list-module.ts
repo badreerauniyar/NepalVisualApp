@@ -7,6 +7,9 @@ import { RightSidebar } from './component/right-sidebar/right-sidebar';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { VoterList } from './voter-list/voter-list';
+import { DropdownSelector } from './component/dropdown-selector/dropdown-selector';
+import { VoterTable } from './component/voter-table/voter-table';
+import { VoterStatistics } from './component/voter-statistics/voter-statistics';
 
 
 @NgModule({
@@ -14,6 +17,9 @@ import { VoterList } from './voter-list/voter-list';
     LeftSidebar,
     RightSidebar,
     VoterList,
+    DropdownSelector,
+    VoterTable,
+    VoterStatistics,
   ],
   imports: [
     FormsModule,

@@ -1,0 +1,132 @@
+<div class="dropdown-selector-container">
+  <h3 class="mb-3">Filter Voters</h3>
+  
+  <div class="dropdown-grid">
+    <!-- Province -->
+    <div class="form-group">
+      <label for="province">Province / प्रदेश</label>
+      <select 
+        id="province" 
+        class="form-control"
+        [(ngModel)]="selectedProvinceId"
+        (change)="onProvinceChange()"
+        [disabled]="loadingProvinces">
+        <option [value]="null">Select Province</option>
+        @for (province of provinces; track province.id) {
+          <option [value]="province.id">
+            {{ province.nepali_name }} ({{ province.english_name }})
+          </option>
+        }
+      </select>
+      @if (loadingProvinces) {
+        <small class="text-muted">Loading...</small>
+      }
+    </div>
+
+    <!-- District -->
+    <div class="form-group">
+      <label for="district">District / जिल्ला</label>
+      <select 
+        id="district" 
+        class="form-control"
+        [(ngModel)]="selectedDistrictId"
+        (change)="onDistrictChange()"
+        [disabled]="!selectedProvinceId || loadingDistricts">
+        <option [value]="null">Select District</option>
+        @for (district of districts; track district.id) {
+          <option [value]="district.id">
+            {{ district.nepali_name }} ({{ district.english_name }})
+          </option>
+        }
+      </select>
+      @if (loadingDistricts) {
+        <small class="text-muted">Loading...</small>
+      }
+    </div>
+
+    <!-- Municipality -->
+    <div class="form-group">
+      <label for="municipality">Municipality / नगरपालिका</label>
+      <select 
+        id="municipality" 
+        class="form-control"
+        [(ngModel)]="selectedMunicipalityId"
+        (change)="onMunicipalityChange()"
+        [disabled]="!selectedDistrictId || loadingMunicipalities">
+        <option [value]="null">Select Municipality</option>
+        @for (municipality of municipalities; track municipality.id) {
+          <option [value]="municipality.id">
+            {{ municipality.nepali_name }} ({{ municipality.english_name }})
+          </option>
+        }
+      </select>
+      @if (loadingMunicipalities) {
+        <small class="text-muted">Loading...</small>
+      }
+    </div>
+
+    <!-- Ward -->
+    <div class="form-group">
+      <label for="ward">Ward / वडा</label>
+      <select 
+        id="ward" 
+        class="form-control"
+        [(ngModel)]="selectedWardId"
+        (change)="onWardChange()"
+        [disabled]="!selectedMunicipalityId || loadingWards">
+        <option [value]="null">Select Ward</option>
+        @for (ward of wards; track ward.id) {
+          <option [value]="ward.id">
+            Ward {{ ward.ward_number }} 
+            @if (ward.nepali_name) {
+              ({{ ward.nepali_name }})
+            }
+          </option>
+        }
+      </select>
+      @if (loadingWards) {
+        <small class="text-muted">Loading...</small>
+      }
+    </div>
+
+    <!-- Polling Center -->
+    <div class="form-group">
+      <label for="pollingCenter">Polling Center / मतदान केन्द्र</label>
+      <select 
+        id="pollingCenter" 
+        class="form-control"
+        [(ngModel)]="selectedPollingCenterId"
+        [disabled]="!selectedWardId || loadingPollingCenters">
+        <option [value]="null">Select Polling Center</option>
+        @for (center of pollingCenters; track center.id) {
+          <option [value]="center.id">
+            {{ center.nepali_name }}
+            @if (center.english_name) {
+              ({{ center.english_name }})
+            }
+          </option>
+        }
+      </select>
+      @if (loadingPollingCenters) {
+        <small class="text-muted">Loading...</small>
+      }
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button 
+      type="button" 
+      class="btn btn-primary"
+      (click)="onSubmit()"
+      [disabled]="!selectedPollingCenterId">
+      Search Voters
+    </button>
+    <button 
+      type="button" 
+      class="btn btn-secondary"
+      (click)="resetFilters()">
+      Reset
+    </button>
+  </div>
+</div>
+

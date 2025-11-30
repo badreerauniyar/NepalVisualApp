@@ -1,18 +1,45 @@
-<div class="homepage-container">
-  <!-- Left Sidebar -->
-  <app-left-sidebar 
-    class="sidebar left-sidebar"
-    (filterChange)="onFilterChange($event)"
-    (populationToggle)="onPopulationToggle($event)"
-  ></app-left-sidebar>
-  
-  <!-- Table Map Area -->
-  <div class="table">
-    table list
+<div class="voter-list-container">
+  <div class="page-header">
+    <h1>Voter List / मतदाता सूची</h1>
+    <!-- <p class="subtitle">Search and filter voters by administrative hierarchy</p> -->
   </div>
-  
-  <!-- Right Sidebar -->
-  <!-- <app-right-sidebar class="sidebar right-sidebar"></app-right-sidebar> -->
-</div>
 
-<
+  <!-- Dropdown Selector Child -->
+  <app-dropdown-selector
+    (filtersSelected)="onFiltersSelected($event)">
+  </app-dropdown-selector>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p>Loading voters...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error) {
+    <div class="alert alert-danger" role="alert">
+      <strong>Error:</strong> {{ error }}
+    </div>
+  }
+
+  <!-- Voter Statistics -->
+  @if (!loading && !error && voters.length > 0) {
+    <app-voter-statistics [voters]="voters"></app-voter-statistics>
+  }
+
+  <!-- Voter Table Child -->
+  @if (!loading && !error && voters.length > 0) {
+    <app-voter-table [voters]="voters"></app-voter-table>
+  }
+
+  <!-- Empty State -->
+  @if (!loading && !error && voters.length === 0 && totalCount === 0) {
+    <div class="empty-state">
+      <p>No voters found. Please select filters and click "Search Voters".</p>
+    </div>
+  }
+</div>

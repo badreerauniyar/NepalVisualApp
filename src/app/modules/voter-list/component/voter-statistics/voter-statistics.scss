@@ -1,0 +1,87 @@
+.voter-statistics-container {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  margin-top: 2rem;
+
+  .statistics-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 3rem;
+    color: #6c757d;
+  }
+
+  .statistics-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .summary-card {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      border: 1px solid #e9ecef;
+
+      .summary-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+      }
+
+      .summary-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+      }
+    }
+  }
+
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+
+    .chart-card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid #e9ecef;
+
+      &.chart-card-wide {
+        grid-column: 1 / -1;
+      }
+
+      .chart-wrapper {
+        position: relative;
+        height: 300px;
+        width: 100%;
+
+        @media (max-width: 768px) {
+          height: 250px;
+        }
+
+        canvas {
+          max-height: 100%;
+        }
+      }
+    }
+  }
+}
+

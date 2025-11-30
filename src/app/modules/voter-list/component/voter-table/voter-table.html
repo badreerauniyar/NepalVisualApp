@@ -1,0 +1,197 @@
+<div class="voter-table-container">
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="search-bar">
+      <input 
+        type="text" 
+        class="form-control"
+        placeholder="Search by name or voter ID..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChange()">
+    </div>
+
+    <div class="filter-controls">
+      <select 
+        class="form-control"
+        [(ngModel)]="genderFilter"
+        (change)="onFilterChange()">
+        <option value="">All Genders</option>
+        @for (gender of availableGenders; track gender) {
+          <option [value]="gender">{{ gender }}</option>
+        }
+      </select>
+
+      <input 
+        type="number" 
+        class="form-control"
+        placeholder="Min Age"
+        [(ngModel)]="minAgeFilter"
+        (input)="onFilterChange()">
+
+      <input 
+        type="number" 
+        class="form-control"
+        placeholder="Max Age"
+        [(ngModel)]="maxAgeFilter"
+        (input)="onFilterChange()">
+
+      <button 
+        class="btn btn-secondary"
+        (click)="clearFilters()">
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  <!-- Results Info -->
+  <div class="results-info">
+    <span>
+      Showing {{ displayedVoters.length }} of {{ voters.length }} voters
+      @if (searchTerm || genderFilter || minAgeFilter !== null || maxAgeFilter !== null) {
+        (filtered)
+      }
+    </span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th (click)="onSort('serial_number')" class="sortable">
+            S.N. {{ getSortIcon('serial_number') }}
+          </th>
+          <th (click)="onSort('voter_id')" class="sortable">
+            Voter ID {{ getSortIcon('voter_id') }}
+          </th>
+          <th (click)="onSort('full_name')" class="sortable">
+            Name / नाम {{ getSortIcon('full_name') }}
+          </th>
+          <th (click)="onSort('spouse_name')" class="sortable">
+            Spouse Name / पति/पत्नीको नाम {{ getSortIcon('spouse_name') }}
+          </th>
+          <th (click)="onSort('father_mother_name')" class="sortable">
+            Parent Name / पिता/माताको नाम {{ getSortIcon('father_mother_name') }}
+          </th>
+          <th (click)="onSort('gender')" class="sortable">
+            Gender / लिङ्ग {{ getSortIcon('gender') }}
+          </th>
+          <th (click)="onSort('age')" class="sortable">
+            Age / उमेर {{ getSortIcon('age') }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (displayedVoters.length === 0) {
+          <tr>
+            <td colspan="7" class="text-center text-muted">
+              No voters found
+            </td>
+          </tr>
+        } @else {
+          @for (voter of displayedVoters; track voter.id) {
+            <tr>
+              <td>{{ voter.serial_number }}</td>
+              <td>{{ voter.voter_id }}</td>
+              <td>
+                <div class="voter-name">
+                  <strong>{{ voter.full_name }}</strong>
+                  @if (voter.full_name_english) {
+                    <small class="text-muted d-block">{{ voter.full_name_english }}</small>
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="spouse-name">
+                  {{ voter.spouse_name || '-' }}
+                  @if (voter.spouse_name_english) {
+                    <small class="text-muted d-block">({{ voter.spouse_name_english }})</small>
+                  }
+                </div>
+              </td>
+              <td>
+                <div class="parent-name">
+                  {{ voter.father_mother_name || '-' }}
+                  @if (voter.father_mother_name_english) {
+                    <small class="text-muted d-block">({{ voter.father_mother_name_english }})</small>
+                  }
+                </div>
+              </td>
+              <td>
+                {{ voter.gender }}
+                @if (voter.gender_english) {
+                  <small class="text-muted d-block">({{ voter.gender_english }})</small>
+                }
+              </td>
+              <td>{{ voter.age }}</td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (totalPages > 1) {
+    <div class="pagination-section">
+      <div class="pagination-info">
+        <span>Page {{ currentPage }} of {{ totalPages }}</span>
+        <select 
+          class="form-control form-control-sm"
+          [(ngModel)]="itemsPerPage"
+          (change)="onItemsPerPageChange()">
+          <option [value]="25">25 per page</option>
+          <option [value]="50">50 per page</option>
+          <option [value]="100">100 per page</option>
+          <option [value]="200">200 per page</option>
+        </select>
+      </div>
+
+      <div class="pagination-controls">
+        <button 
+          class="btn btn-sm btn-outline-primary"
+          (click)="onPageChange(1)"
+          [disabled]="currentPage === 1">
+          First
+        </button>
+        <button 
+          class="btn btn-sm btn-outline-primary"
+          (click)="onPageChange(currentPage - 1)"
+          [disabled]="currentPage === 1">
+          Previous
+        </button>
+        
+        @for (page of [].constructor(totalPages); track $index) {
+          @if ($index + 1 === currentPage || 
+               $index + 1 === 1 || 
+               $index + 1 === totalPages ||
+               ($index + 1 >= currentPage - 2 && $index + 1 <= currentPage + 2)) {
+            <button 
+              class="btn btn-sm"
+              [class.btn-primary]="$index + 1 === currentPage"
+              [class.btn-outline-primary]="$index + 1 !== currentPage"
+              (click)="onPageChange($index + 1)">
+              {{ $index + 1 }}
+            </button>
+          } @else if ($index + 1 === currentPage - 3 || $index + 1 === currentPage + 3) {
+            <span class="pagination-ellipsis">...</span>
+          }
+        }
+        
+        <button 
+          class="btn btn-sm btn-outline-primary"
+          (click)="onPageChange(currentPage + 1)"
+          [disabled]="currentPage === totalPages">
+          Next
+        </button>
+        <button 
+          class="btn btn-sm btn-outline-primary"
+          (click)="onPageChange(totalPages)"
+          [disabled]="currentPage === totalPages">
+          Last
+        </button>
+      </div>
+    </div>
+  }
+</div>
+

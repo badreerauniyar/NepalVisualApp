@@ -1,0 +1,66 @@
+<div class="voter-statistics-container">
+  <h3 class="statistics-title">Voter Statistics / मतदाता तथ्याङ्क</h3>
+  
+  @if (voters.length === 0) {
+    <div class="no-data">
+      <p>No voter data available. Please select filters and search voters first.</p>
+    </div>
+  } @else {
+    <div class="statistics-summary">
+      <div class="summary-card">
+        <div class="summary-label">Total Voters</div>
+        <div class="summary-value">{{ voters.length }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Male / पुरुष</div>
+        <div class="summary-value">{{ genderStats.male }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Female / महिला</div>
+        <div class="summary-value">{{ genderStats.female }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Married / विवाहित</div>
+        <div class="summary-value">{{ maritalStats.married }}</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <!-- Gender Distribution -->
+      <div class="chart-card">
+        <div class="chart-wrapper">
+          <canvas id="genderChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Age Group Distribution -->
+      <div class="chart-card">
+        <div class="chart-wrapper">
+          <canvas id="ageGroupChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Age Groups by Gender -->
+      <div class="chart-card">
+        <div class="chart-wrapper">
+          <canvas id="ageGenderChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Marital Status -->
+      <div class="chart-card">
+        <div class="chart-wrapper">
+          <canvas id="maritalStatusChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Age Pyramid -->
+      <div class="chart-card chart-card-wide">
+        <div class="chart-wrapper">
+          <canvas id="agePyramidChart"></canvas>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
