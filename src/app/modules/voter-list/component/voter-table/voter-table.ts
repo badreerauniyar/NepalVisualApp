@@ -18,6 +18,8 @@ export interface Voter {
   father_mother_name_english?: string;
   citizen_number?: string;
   address?: string;
+  religion?: string;
+  caste?: string;
   polling_centers?: {
     id: number;
     nepali_name: string;

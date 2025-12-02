@@ -340,6 +340,100 @@ function generateFilePath(metadata) {
 }
 
 // ============================================
+// NAME ANALYSIS FUNCTIONS (ported from name-analysis.service.ts)
+// ============================================
+
+// Religion indicators
+const religionPatterns = {
+  'Hindu': ['वहादुर','शर्मा','कार्की','कुमारी','कुमार' ,'prashad','prasad', 'देवी','sharma', 'पाण्डे', 'pandey', 'चेत्री', 'chhetri', 'थापा', 'thapa', 'राणा', 'rana', 'श्रेष्ठ', 'shrestha', 'यादव', 'yadav', 'राई', 'rai', 'गुरुङ', 'gurung', 'मगर', 'magar', 'तामाङ', 'tamang', 'लिम्बू', 'limbu', 'शेर्पा', 'sherpa', 'थारू', 'tharu','sardar','sah' ,'chaudhary','सरदार', 'साह', 'चौधरी','राम','खड्का'],
+  'Muslim': ['अलि','मोहमद','मो.','हुसेन','राइन','खातुन', 'अकरम', 'खाँ', 'mohammad', 'mohamed', 'mohammed', 'खान', 'khan', 'शेख', 'sheikh', 'मियाँ', 'miyan', 'मियां', 'miyan', 'अली', 'ali', 'हुसैन', 'hussain', 'हसन', 'hasan', 'अहमद', 'ahmad', 'रहमान', 'rahman', 'रशीद', 'rashid', 'इब्राहिम', 'ibrahim', 'युसुफ', 'yusuf', 'अकबर', 'akbar','आलम','मुस्लीम','hak','muslim','हक','इसलाम','कादीर','कुदुस','अब्दुल'],
+  'Buddhist': ['लामा', 'lama', 'तामाङ', 'tamang', 'शेर्पा', 'sherpa', 'गुरुङ', 'gurung', 'बुद्ध', 'buddha', 'साक्य', 'shakya'],
+  'Christian': ['पीटर', 'peter', 'पॉल', 'paul', 'जॉन', 'john', 'मारिया', 'maria', 'मैरी', 'mary'],
+  'Other': []
+};
+
+/**
+ * Extract caste from name - uses the last name (surname) as caste
+ */
+function extractCaste(name) {
+  if (!name) return null;
+  
+  // Split name by spaces and get the last word (surname)
+  const nameParts = name.trim().split(/\s+/);
+  
+  if (nameParts.length === 0) {
+    return null;
+  }
+  
+  // Get the last part (surname)
+  const surname = nameParts[nameParts.length - 1].trim();
+  
+  // Return null if surname is empty or too short (less than 2 characters)
+  if (!surname || surname.length < 2) {
+    return null;
+  }
+  
+  return surname;
+}
+
+/**
+ * Extract religion from name
+ */
+function extractReligion(name) {
+  if (!name) return 'Unknown';
+  
+  const nameLower = name.toLowerCase();
+  
+  // Check Muslim patterns first (most distinct)
+  for (const pattern of religionPatterns['Muslim']) {
+    if (nameLower.includes(pattern.toLowerCase())) {
+      return 'Muslim';
+    }
+  }
+  
+  // Check Buddhist patterns
+  for (const pattern of religionPatterns['Buddhist']) {
+    if (nameLower.includes(pattern.toLowerCase())) {
+      return 'Buddhist';
+    }
+  }
+  
+  // Check Christian patterns
+  for (const pattern of religionPatterns['Christian']) {
+    if (nameLower.includes(pattern.toLowerCase())) {
+      return 'Christian';
+    }
+  }
+  
+  // Check Hindu patterns (most common in Nepal)
+  for (const pattern of religionPatterns['Hindu']) {
+    if (nameLower.includes(pattern.toLowerCase())) {
+      return 'Hindu';
+    }
+  }
+  
+  return 'Unknown';
+}
+
+/**
+ * Analyze voter and return caste and religion
+ */
+function analyzeVoter(voter) {
+  // Try full name first
+  const name = voter.full_name || voter.full_name_english || '';
+  const fatherName = voter.father_mother_name || '';
+  
+  // For caste, use the last name from the voter's own name (not father's name)
+  const caste = extractCaste(name);
+  
+  // For religion, combine names for better analysis
+  const combinedName = `${name} ${fatherName}`.trim();
+  const religion = extractReligion(combinedName);
+  
+  return { caste, religion };
+}
+
+// ============================================
 // IMPORT FUNCTIONS (from import-ward-to-supabase.js)
 // ============================================
 
@@ -702,6 +796,22 @@ async function importVoters(pollingCenterId, votersData) {
       const spouseName = record.spouse_name || record['पति/पत्नीको नाम'];
       const fatherMotherName = record.father_mother_name || record['पिता/माताको नाम'];
       
+      // Use already-calculated religion and caste from the record (if available)
+      // Otherwise, analyze the name (fallback for backward compatibility)
+      let caste = record.caste;
+      let religion = record.religion;
+      
+      if (!caste || !religion) {
+        const voterForAnalysis = {
+          full_name: fullName,
+          full_name_english: null,
+          father_mother_name: fatherMotherName
+        };
+        const analysis = analyzeVoter(voterForAnalysis);
+        caste = caste || analysis.caste;  // Caste is now the surname directly (or null)
+        religion = religion || (analysis.religion !== 'Unknown' ? analysis.religion : null);
+      }
+      
       return {
         polling_center_id: pollingCenterId,
         voter_id: voterNumber,
@@ -710,25 +820,28 @@ async function importVoters(pollingCenterId, votersData) {
         age: age ? parseInt(age) : null,
         gender: gender || null,
         spouse_name: (spouseName && spouseName !== '-') ? spouseName : null,
-        father_mother_name: fatherMotherName || null
+        father_mother_name: fatherMotherName || null,
+        caste: caste,
+        religion: religion
       };
     });
     
-    const { data: inserted, error } = await supabase
+    // Use upsert instead of insert - update if exists, insert if not
+    // Using voter_id as the unique key for conflict resolution
+    const { data: upserted, error } = await supabase
       .from('voters')
-      .insert(voters)
+      .upsert(voters, {
+        onConflict: 'voter_id',
+        ignoreDuplicates: false
+      })
       .select('id');
     
     if (error) {
-      if (error.code === '23505') {
-        log(`  ⚠ Batch ${batchNumber}/${totalBatches}: Some records already exist (skipping duplicates)`, 'yellow');
-        skippedCount += batch.length;
-      } else {
-        throw new Error(`Failed to insert batch ${batchNumber}: ${error.message}`);
-      }
+      throw new Error(`Failed to upsert batch ${batchNumber}: ${error.message}`);
     } else {
-      insertedCount += inserted.length;
-      log(`  ✓ Batch ${batchNumber}/${totalBatches}: Inserted ${inserted.length} records`, 'green');
+      const processed = upserted ? upserted.length : batch.length;
+      insertedCount += processed; // Count all as processed (upsert handles both insert and update)
+      log(`  ✓ Batch ${batchNumber}/${totalBatches}: Upserted ${processed} records`, 'green');
     }
     
     process.stdout.write(`\r  Progress: ${Math.min(i + batchSize, votersData.length)}/${votersData.length} records`);
@@ -762,6 +875,29 @@ async function extractAndImport(phpFile) {
     log('\n📊 Step 3: Extracting table data...', 'cyan');
     const tableData = extractTableData(fileContent);
     log(`✓ Extracted ${tableData.data.length} records`, 'green');
+    
+    // Step 3.5: Analyze names and add religion/caste to each record
+    log('\n🔍 Step 3.5: Analyzing names for religion and caste...', 'cyan');
+    tableData.data = tableData.data.map(record => {
+      const fullName = record.voter_name || record['मतदाताको नाम'] || '';
+      const fatherMotherName = record.father_mother_name || record['पिता/माताको नाम'] || '';
+      
+      const voterForAnalysis = {
+        full_name: fullName,
+        full_name_english: null,
+        father_mother_name: fatherMotherName
+      };
+      
+      const { caste, religion } = analyzeVoter(voterForAnalysis);
+      
+      // Add religion and caste to the record
+      return {
+        ...record,
+        religion: religion !== 'Unknown' ? religion : null,
+        caste: caste || null  // Caste is now the surname directly (or null)
+      };
+    });
+    log(`✓ Analyzed ${tableData.data.length} records`, 'green');
     
     // Step 4: Generate file path (hierarchical structure)
     const relativePath = generateFilePath(metadata);
@@ -843,9 +979,9 @@ async function extractAndImport(phpFile) {
     log('\n✅ Process completed!', 'green');
     log(`  JSON file: ${relativePath}`, 'cyan');
     log(`  Total records: ${tableData.data.length}`, 'cyan');
-    log(`  Successfully inserted: ${insertedCount}`, 'green');
+    log(`  Successfully processed (inserted/updated): ${insertedCount}`, 'green');
     if (skippedCount > 0) {
-      log(`  Skipped (duplicates): ${skippedCount}`, 'yellow');
+      log(`  Skipped: ${skippedCount}`, 'yellow');
     }
     
     // Verify

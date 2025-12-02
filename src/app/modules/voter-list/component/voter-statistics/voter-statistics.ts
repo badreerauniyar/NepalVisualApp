@@ -121,20 +121,31 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         this.maritalStats.single++;
       }
 
-      // Religion and Caste analysis from name
-      const analysis = this.nameAnalysisService.analyzeVoter({
-        full_name: voter.full_name,
-        full_name_english: voter.full_name_english,
-        father_mother_name: voter.father_mother_name
-      });
+      // Religion and Caste - use stored values from database/JSON, fallback to analysis if not available
+      let religion = voter.religion;
+      let caste = voter.caste;
+      
+      // Fallback to name analysis if religion/caste not available (for backward compatibility)
+      if (!religion || !caste) {
+        const analysis = this.nameAnalysisService.analyzeVoter({
+          full_name: voter.full_name,
+          full_name_english: voter.full_name_english,
+          father_mother_name: voter.father_mother_name
+        });
+        
+        // Only use analysis result if stored value is not available
+        religion = religion || analysis.religion;
+        // Convert null to undefined to match TypeScript type
+        caste = caste || (analysis.caste ?? undefined);
+      }
 
-      // Count religion
-      const religion = analysis.religion;
-      this.religionStats[religion] = (this.religionStats[religion] || 0) + 1;
+      // Count religion (use 'Unknown' if still null/undefined)
+      const religionKey = religion || 'Unknown';
+      this.religionStats[religionKey] = (this.religionStats[religionKey] || 0) + 1;
 
-      // Count caste
-      const caste = analysis.caste;
-      this.casteStats[caste] = (this.casteStats[caste] || 0) + 1;
+      // Count caste (use 'Unknown' if still null/undefined, otherwise use the surname directly)
+      const casteKey = caste || 'Unknown';
+      this.casteStats[casteKey] = (this.casteStats[casteKey] || 0) + 1;
     });
   }
 
