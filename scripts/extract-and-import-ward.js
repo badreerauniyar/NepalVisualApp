@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+//to run : node scripts/extract-and-import-ward.js src/assets/view-ward-data/view_ward2.php
 /**
  * Extract Ward Data and Import to Supabase (All-in-One)
  * 
