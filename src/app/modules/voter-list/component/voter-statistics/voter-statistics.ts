@@ -2,7 +2,6 @@ import { Component, OnInit, Input, OnChanges, SimpleChanges, ChangeDetectorRef, 
 import { CommonModule } from '@angular/common';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 import { Voter } from '../voter-table/voter-table';
-import { NameAnalysisService } from '../../../../services/name-analysis.service';
 
 Chart.register(...registerables);
 
@@ -51,8 +50,7 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
   casteStats: { [key: string]: number } = {};
 
   constructor(
-    private cdr: ChangeDetectorRef,
-    private nameAnalysisService: NameAnalysisService
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -121,31 +119,15 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         this.maritalStats.single++;
       }
 
-      // Religion and Caste - use stored values from database/JSON, fallback to analysis if not available
-      let religion = voter.religion;
-      let caste = voter.caste;
-      
-      // Fallback to name analysis if religion/caste not available (for backward compatibility)
-      if (!religion || !caste) {
-        const analysis = this.nameAnalysisService.analyzeVoter({
-          full_name: voter.full_name,
-          full_name_english: voter.full_name_english,
-          father_mother_name: voter.father_mother_name
-        });
-        
-        // Only use analysis result if stored value is not available
-        religion = religion || analysis.religion;
-        // Convert null to undefined to match TypeScript type
-        caste = caste || (analysis.caste ?? undefined);
-      }
+      // Religion and Caste - use stored values directly from database/JSON
+      const religion = voter.religion || 'Unknown';
+      const caste = voter.caste || 'Unknown';
 
-      // Count religion (use 'Unknown' if still null/undefined)
-      const religionKey = religion || 'Unknown';
-      this.religionStats[religionKey] = (this.religionStats[religionKey] || 0) + 1;
+      // Count religion
+      this.religionStats[religion] = (this.religionStats[religion] || 0) + 1;
 
-      // Count caste (use 'Unknown' if still null/undefined, otherwise use the surname directly)
-      const casteKey = caste || 'Unknown';
-      this.casteStats[casteKey] = (this.casteStats[casteKey] || 0) + 1;
+      // Count caste
+      this.casteStats[caste] = (this.casteStats[caste] || 0) + 1;
     });
   }
 

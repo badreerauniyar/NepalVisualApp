@@ -345,8 +345,50 @@ function generateFilePath(metadata) {
 
 // Religion indicators
 const religionPatterns = {
-  'Hindu': ['वहादुर','शर्मा','कार्की','कुमारी','कुमार' ,'prashad','prasad', 'देवी','sharma', 'पाण्डे', 'pandey', 'चेत्री', 'chhetri', 'थापा', 'thapa', 'राणा', 'rana', 'श्रेष्ठ', 'shrestha', 'यादव', 'yadav', 'राई', 'rai', 'गुरुङ', 'gurung', 'मगर', 'magar', 'तामाङ', 'tamang', 'लिम्बू', 'limbu', 'शेर्पा', 'sherpa', 'थारू', 'tharu','sardar','sah' ,'chaudhary','सरदार', 'साह', 'चौधरी','राम','खड्का'],
-  'Muslim': ['अलि','मोहमद','मो.','हुसेन','राइन','खातुन', 'अकरम', 'खाँ', 'mohammad', 'mohamed', 'mohammed', 'खान', 'khan', 'शेख', 'sheikh', 'मियाँ', 'miyan', 'मियां', 'miyan', 'अली', 'ali', 'हुसैन', 'hussain', 'हसन', 'hasan', 'अहमद', 'ahmad', 'रहमान', 'rahman', 'रशीद', 'rashid', 'इब्राहिम', 'ibrahim', 'युसुफ', 'yusuf', 'अकबर', 'akbar','आलम','मुस्लीम','hak','muslim','हक','इसलाम','कादीर','कुदुस','अब्दुल'],
+  'Hindu': [
+    // Common Hindu caste surnames
+    'वहादुर', 'bahadur', 'शर्मा', 'sharma', 'कार्की', 'karki', 'कुमारी', 'kumari', 'कुमार', 'kumar', 
+    'prashad', 'prasad', 'प्रसाद', 'देवी', 'devi', 'पाण्डे', 'pandey', 'पाण्डेय', 'pandey', 
+    'चेत्री', 'chhetri', 'थापा', 'thapa', 'राणा', 'rana', 'श्रेष्ठ', 'shrestha', 
+    'यादव', 'yadav', 'राई', 'rai', 'गुरुङ', 'gurung', 'मगर', 'magar', 
+    'तामाङ', 'tamang', 'लिम्बू', 'limbu', 'शेर्पा', 'sherpa', 'थारू', 'tharu',
+    'sardar', 'सरदार', 'sah', 'साह', 'chaudhary', 'चौधरी', 'चैाधरी',
+    'राम', 'ram', 'खड्का', 'khadka', 'बिष्ट', 'bist', 'बिष्टा', 'bista',
+    'पन्त', 'pant', 'भट्ट', 'bhatt', 'भट्टराई', 'bhattarai', 'दाहाल', 'dahal',
+    'ढकाल', 'dhakal', 'गौतम', 'gautam', 'जोशी', 'joshi', 'खनाल', 'khanal',
+    'पौडेल', 'paudel', 'रिजाल', 'rijal', 'सापकोटा', 'sapkota', 'सुवेदी', 'subedi',
+    'तिवारी', 'tiwari', 'उप्रेती', 'upreti', 'बस्नेत', 'basnet', 'भण्डारी', 'bhandari',
+    'अधिकारी', 'adhikari', 'कोइराला', 'koirala', 'महतो', 'mahato', 'मण्डल', 'mandal',
+    'सिंह', 'singh', 'कुँवर', 'kunwar', 'रावत', 'rawat', 'घर्ती', 'gharti',
+    'कटुवाल', 'katwal', 'बुढाथोकी', 'budhathoki', 'पुन', 'pun', 'शाही', 'shahi',
+    // Common Hindu first names
+    'कृष्ण', 'krishna', 'शिव', 'shiva', 'गणेश', 'ganesh', 'हरि', 'hari',
+    'विष्णु', 'vishnu', 'लक्ष्मी', 'laxmi', 'सीता', 'sita', 'पार्वती', 'parvati',
+    'दुर्गा', 'durga', 'काली', 'kali', 'सरस्वती', 'saraswati','दास','तारा',
+    'राम', 'रामचन्द्र', 'ramchandra', 'हनुमान', 'hanuman', 'राधा', 'radha',
+    'कुमार', 'kumar', 'prasad', 'प्रसाद', 'prashad','खङ्ग','भुजेल','तेली'
+  ],
+  'Muslim': [
+    // Common Muslim surnames
+    'अलि', 'ali', 'अली', 'मोहमद', 'मो.', 'mohammad', 'mohamed', 'mohammed',
+    'हुसेन', 'hussain', 'हुसैन', 'राइन', 'राइन', 'खातुन', 'khatun',
+    'अकरम', 'akram', 'खाँ', 'खान', 'khan', 'शेख', 'sheikh',
+    'मियाँ', 'miyan', 'मियां', 'हसन', 'hasan', 'हसन',
+    'अहमद', 'ahmad', 'ahmed', 'रहमान', 'rahman', 'रशीद', 'rashid',
+    'इब्राहिम', 'ibrahim', 'युसुफ', 'yusuf', 'अकबर', 'akbar',
+    'आलम', 'alam', 'मुस्लीम', 'muslim', 'हक', 'hak', 'इसलाम', 'islam',
+    'कादीर', 'kadir', 'कुदुस', 'kudus', 'अब्दुल', 'abdul', 'अब्दुल्ला', 'abdullah',
+    'अन्सारी', 'ansari', 'कुरैशी', 'qureshi', 'पठान', 'pathan',
+    'सैयद', 'sayyid', 'सैयद', 'syed', 'मलिक', 'malik', 'मिर्जा', 'mirza',
+    'बेग', 'beg', 'बेगम', 'begum', 'फारुख', 'farooq', 'फारूक', 'faruk',
+    'हमीद', 'hamid', 'हामिद', 'हसीब', 'haseeb', 'हसीब', 'haseeb',
+    // Common Muslim first names
+    'मोहम्मद', 'मो.','mohammad', 'अहमद', 'ahmad', 'अली', 'ali', 'हसन', 'hasan',
+    'हुसैन', 'hussain', 'इब्राहिम', 'ibrahim', 'इस्माइल', 'ismail',
+    'युसुफ', 'yusuf', 'हामिद', 'hamid', 'रशीद', 'rashid', 'सलीम', 'salim',
+    'करीम', 'हजरत' ,'उमर','नुर', 'महमद','karim', 'रहीम', 'rahim', 'नबी', 'nabi', 'रसूल', 'rasul',
+    'ईसलाम', 'islam','विवि','सहादत','कुजर्नी','तस्लीम','मिया',
+  ],
   'Buddhist': ['लामा', 'lama', 'तामाङ', 'tamang', 'शेर्पा', 'sherpa', 'गुरुङ', 'gurung', 'बुद्ध', 'buddha', 'साक्य', 'shakya'],
   'Christian': ['पीटर', 'peter', 'पॉल', 'paul', 'जॉन', 'john', 'मारिया', 'maria', 'मैरी', 'mary'],
   'Other': []
