@@ -11,7 +11,7 @@
     "house_of_representatives_constituency": "1",
     "provincial_assembly_constituency": "1",
     "polling_center": "म.मा.वि. वलुवा, सितापुर",
-    "extracted_at": "2025-12-02T09:32:09.128Z",
+    "extracted_at": "2025-12-02T09:34:10.592Z",
     "source_file": "view_ward.php"
   },
   "headers": [
@@ -1361,7 +1361,7 @@
       "पिता/माताको नाम": "भुलन / लक्ष्मीनिया",
       "father_mother_name": "भुलन / लक्ष्मीनिया",
       "voter_id": "11684082",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -1760,7 +1760,7 @@
       "पिता/माताको नाम": "बलदेव / हसनी",
       "father_mother_name": "बलदेव / हसनी",
       "voter_id": "14315302",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "चौधरी"
     },
     {
@@ -2577,7 +2577,7 @@
       "पिता/माताको नाम": "धन कुमार/ सान्ता देवी",
       "father_mother_name": "धन कुमार/ सान्ता देवी",
       "voter_id": "11684243",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -4572,7 +4572,7 @@
       "पिता/माताको नाम": "भतु वहादुर/ रेनु वहादुर",
       "father_mother_name": "भतु वहादुर/ रेनु वहादुर",
       "voter_id": "26067115",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -5902,7 +5902,7 @@
       "पिता/माताको नाम": "सावरल / मैंमुन",
       "father_mother_name": "सावरल / मैंमुन",
       "voter_id": "14315471",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "लेहरि"
     },
     {
@@ -6092,7 +6092,7 @@
       "पिता/माताको नाम": "सफी / तारा",
       "father_mother_name": "सफी / तारा",
       "voter_id": "11684057",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -6586,7 +6586,7 @@
       "पिता/माताको नाम": "बलदेव / मुनुर देवी",
       "father_mother_name": "बलदेव / मुनुर देवी",
       "voter_id": "18452474",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "सरदार"
     },
     {
@@ -6985,7 +6985,7 @@
       "पिता/माताको नाम": "फादिम / साहदा",
       "father_mother_name": "फादिम / साहदा",
       "voter_id": "25148348",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -10386,7 +10386,7 @@
       "पिता/माताको नाम": "करामत / धुर्नी",
       "father_mother_name": "करामत / धुर्नी",
       "voter_id": "14315638",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -11070,7 +11070,7 @@
       "पिता/माताको नाम": "फतुरी / लक्ष्मीनिया",
       "father_mother_name": "फतुरी / लक्ष्मीनिया",
       "voter_id": "14315760",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "मियाँ"
     },
     {
@@ -15934,7 +15934,7 @@
       "पिता/माताको नाम": "भुलन खलिफा/ लक्ष्मीनिया",
       "father_mother_name": "भुलन खलिफा/ लक्ष्मीनिया",
       "voter_id": "11684056",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "नट"
     },
     {
@@ -16713,7 +16713,7 @@
       "पिता/माताको नाम": "उपेन्द्र दास/ आशा देवी",
       "father_mother_name": "उपेन्द्र दास/ आशा देवी",
       "voter_id": "11800977",
-      "religion": "Buddhist",
+      "religion": "Hindu",
       "caste": "दास"
     },
     {
@@ -17853,7 +17853,7 @@
       "पिता/माताको नाम": "रामसुल / नाजो",
       "father_mother_name": "रामसुल / नाजो",
       "voter_id": "20004368",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "मियाँ"
     },
     {
@@ -19335,7 +19335,7 @@
       "पिता/माताको नाम": "करामत / धुरनी",
       "father_mother_name": "करामत / धुरनी",
       "voter_id": "11684087",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "नट"
     },
     {
@@ -20019,7 +20019,7 @@
       "पिता/माताको नाम": "हकिम / हसिना",
       "father_mother_name": "हकिम / हसिना",
       "voter_id": "11684349",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "कुजर्नी"
     },
     {
@@ -20475,7 +20475,7 @@
       "पिता/माताको नाम": "करामत / धरनि",
       "father_mother_name": "करामत / धरनि",
       "voter_id": "11684079",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -21368,7 +21368,7 @@
       "पिता/माताको नाम": "भन्नु / वसिरन",
       "father_mother_name": "भन्नु / वसिरन",
       "voter_id": "18304857",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "मियाँ"
     },
     {
@@ -21425,7 +21425,7 @@
       "पिता/माताको नाम": "भन्नु / वसिरन",
       "father_mother_name": "भन्नु / वसिरन",
       "voter_id": "18304856",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "मियाँ"
     },
     {
@@ -21634,7 +21634,7 @@
       "पिता/माताको नाम": "मो / साहनास",
       "father_mother_name": "मो / साहनास",
       "voter_id": "20004856",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "आलम"
     },
     {
@@ -22223,7 +22223,7 @@
       "पिता/माताको नाम": "हकिम / सुखरी देवी",
       "father_mother_name": "हकिम / सुखरी देवी",
       "voter_id": "18314449",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": null
     },
     {
@@ -22831,7 +22831,7 @@
       "पिता/माताको नाम": "मो.ईसराईल / सनो",
       "father_mother_name": "मो.ईसराईल / सनो",
       "voter_id": "15455625",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "मनान"
     },
     {
@@ -22850,7 +22850,7 @@
       "पिता/माताको नाम": "एकरामुल / मैहरुन",
       "father_mother_name": "एकरामुल / मैहरुन",
       "voter_id": "19757491",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "आलम"
     },
     {
@@ -26878,7 +26878,7 @@
       "पिता/माताको नाम": "हसन्त प्रसाद/ नन्दन देवी",
       "father_mother_name": "हसन्त प्रसाद/ नन्दन देवी",
       "voter_id": "17161266",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "सिंह"
     },
     {
@@ -28569,7 +28569,7 @@
       "पिता/माताको नाम": "लक्ष्मी मियाँ/ हसिना",
       "father_mother_name": "लक्ष्मी मियाँ/ हसिना",
       "voter_id": "22172423",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -30412,7 +30412,7 @@
       "पिता/माताको नाम": "बुद्धि विनोद/ सिता देवी",
       "father_mother_name": "बुद्धि विनोद/ सिता देवी",
       "voter_id": "18452573",
-      "religion": "Buddhist",
+      "religion": "Hindu",
       "caste": "पोखरेल"
     },
     {
@@ -32901,7 +32901,7 @@
       "पिता/माताको नाम": "हसन्त प्रसाद/ नन्दन देवी",
       "father_mother_name": "हसन्त प्रसाद/ नन्दन देवी",
       "voter_id": "14315747",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "सिंह"
     },
     {
@@ -36777,7 +36777,7 @@
       "पिता/माताको नाम": "मो खलिल/ जमिला",
       "father_mother_name": "मो खलिल/ जमिला",
       "voter_id": "26067389",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -36815,7 +36815,7 @@
       "पिता/माताको नाम": "कुनाहाइृ / जहिरन",
       "father_mother_name": "कुनाहाइृ / जहिरन",
       "voter_id": "20014287",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -36967,7 +36967,7 @@
       "पिता/माताको नाम": "सोमन / बच्चा",
       "father_mother_name": "सोमन / बच्चा",
       "voter_id": "11684540",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -37005,7 +37005,7 @@
       "पिता/माताको नाम": "ईसलाम / तबीला",
       "father_mother_name": "ईसलाम / तबीला",
       "voter_id": "26147986",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "प्रविण"
     },
     {
@@ -37442,7 +37442,7 @@
       "पिता/माताको नाम": "उसमान / रोजीदन",
       "father_mother_name": "उसमान / रोजीदन",
       "voter_id": "14315954",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -38221,7 +38221,7 @@
       "पिता/माताको नाम": "बेचु / भुनुर देवी",
       "father_mother_name": "बेचु / भुनुर देवी",
       "voter_id": "26040486",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "सरदार"
     },
     {
@@ -38335,7 +38335,7 @@
       "पिता/माताको नाम": "करामत / धुरनी",
       "father_mother_name": "करामत / धुरनी",
       "voter_id": "11684081",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "खातुन"
     },
     {
@@ -39608,7 +39608,7 @@
       "पिता/माताको नाम": "रोजित / हरिहर वती",
       "father_mother_name": "रोजित / हरिहर वती",
       "voter_id": "25729579",
-      "religion": "Muslim",
+      "religion": "Hindu",
       "caste": "मियाँ"
     },
     {

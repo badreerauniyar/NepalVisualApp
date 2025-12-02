@@ -426,6 +426,12 @@ function extractReligion(name) {
   
   const nameLower = name.toLowerCase();
   
+  // console.log("religionPatterns['Hindu']", religionPatterns['Hindu']);
+  for (const pattern of religionPatterns['Hindu']) {
+    if (nameLower.includes(pattern.toLowerCase())) {
+      return 'Hindu';
+    }
+  }
   // Check Muslim patterns first (most distinct)
   for (const pattern of religionPatterns['Muslim']) {
     if (nameLower.includes(pattern.toLowerCase())) {
@@ -448,11 +454,7 @@ function extractReligion(name) {
   }
   
   // Check Hindu patterns (most common in Nepal)
-  for (const pattern of religionPatterns['Hindu']) {
-    if (nameLower.includes(pattern.toLowerCase())) {
-      return 'Hindu';
-    }
-  }
+  
   
   return 'Unknown';
 }
