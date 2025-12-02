@@ -1,11 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './header.html',
   styleUrl: './header.scss'
 })
@@ -15,7 +16,10 @@ export class Header {
 
   searchValue = '';
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    public authService: AuthService
+  ) {}
 
   navigateToHome() {
     this.router.navigate(['/']);
@@ -32,5 +36,9 @@ export class Header {
 
   toggleMobileMenu() {
     this.mobileMenuToggle.emit();
+  }
+
+  async logout() {
+    await this.authService.signOut();
   }
 }

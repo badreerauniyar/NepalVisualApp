@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { environment } from '../../environments/environment';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClientService } from './supabase-client.service';
 
 /**
  * Supabase Service for Voter Data
@@ -19,17 +19,11 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class SupabaseService {
-  private supabase: SupabaseClient | null = null;
+  private supabase: SupabaseClient;
 
-  constructor() {
-    const supabaseUrl = environment.supabaseUrl;
-    const supabaseKey = environment.supabaseKey;
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.warn('Supabase credentials not found in environment. Some features may not work.');
-    } else {
-      this.supabase = createClient(supabaseUrl, supabaseKey);
-    }
+  constructor(private supabaseClientService: SupabaseClientService) {
+    // Use shared Supabase client instance
+    this.supabase = this.supabaseClientService.client;
   }
 
   /**

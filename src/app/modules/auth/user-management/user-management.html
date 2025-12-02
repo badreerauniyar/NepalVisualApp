@@ -1,0 +1,220 @@
+<div class="user-management-container">
+  <div class="header">
+    <h1>User Management</h1>
+    <button 
+      class="btn btn-primary"
+      (click)="toggleCreateForm()"
+      [disabled]="isLoading()"
+    >
+      {{ showCreateForm() ? 'Cancel' : 'Create New User' }}
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (showCreateForm()) {
+    <div class="create-user-form card">
+      <h2>Create New User</h2>
+      <form (ngSubmit)="createUser()">
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input
+            type="email"
+            id="email"
+            class="form-control"
+            [value]="newUserEmail()"
+            (input)="newUserEmail.set($any($event.target).value)"
+            placeholder="user@example.com"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input
+            type="text"
+            id="fullName"
+            class="form-control"
+            [value]="newUserFullName()"
+            (input)="newUserFullName.set($any($event.target).value)"
+            placeholder="John Doe"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="role">Role *</label>
+          <select
+            id="role"
+            class="form-control"
+            [value]="newUserRoleId()"
+            (change)="newUserRoleId.set($any($event.target).value)"
+            required
+          >
+            <option value="">Select a role</option>
+            @for (role of roles(); track role.id) {
+              <option [value]="role.id">{{ role.role_name }} - {{ role.role_description }}</option>
+            }
+          </select>
+        </div>
+
+        @if (newUserRoleId() && isNewUserRoleNotSuperadmin()) {
+          <div class="form-group">
+            <label>Assigned Provinces</label>
+            <div class="provinces-selector">
+              @for (province of provinces(); track province.id) {
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    [checked]="newUserProvinces().includes(province.province_code || province.english_name)"
+                    (change)="toggleProvince(province.province_code || province.english_name)"
+                  />
+                  <span>{{ province.english_name || province.nepali_name }}</span>
+                </label>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+            {{ isLoading() ? 'Creating...' : 'Create User' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <div class="users-table card">
+    <h2>All Users</h2>
+    
+    @if (isLoading()) {
+      <div class="loading">Loading users...</div>
+    } @else {
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Assigned Provinces</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr>
+                @if (editingUserId() === user.id) {
+                  <td colspan="7">
+                    <div class="edit-form">
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label>Role</label>
+                          <select
+                            class="form-control"
+                            [value]="editUserRoleId()"
+                            (change)="editUserRoleId.set($any($event.target).value)"
+                          >
+                            @for (role of roles(); track role.id) {
+                              <option [value]="role.id">{{ role.role_name }}</option>
+                            }
+                          </select>
+                        </div>
+
+                        @if (editUserRoleId() && isEditUserRoleNotSuperadmin()) {
+                          <div class="form-group">
+                            <label>Assigned Provinces</label>
+                            <div class="provinces-selector">
+                              @for (province of provinces(); track province.id) {
+                                <label class="checkbox-label">
+                                  <input
+                                    type="checkbox"
+                                    [checked]="editUserProvinces().includes(province.province_code || province.english_name)"
+                                    (change)="toggleEditProvince(province.province_code || province.english_name)"
+                                  />
+                                  <span>{{ province.english_name || province.nepali_name }}</span>
+                                </label>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+
+                      <div class="form-actions">
+                        <button 
+                          class="btn btn-primary btn-sm"
+                          (click)="saveUser(user.id)"
+                          [disabled]="isLoading()"
+                        >
+                          Save
+                        </button>
+                        <button 
+                          class="btn btn-secondary btn-sm"
+                          (click)="cancelEdit()"
+                          [disabled]="isLoading()"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                } @else {
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.full_name || '-' }}</td>
+                  <td>
+                    <span class="badge badge-{{ user.role_name }}">
+                      {{ user.role_name }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (user.assigned_provinces && user.assigned_provinces.length > 0) {
+                      <div class="provinces-list">
+                        @for (province of user.assigned_provinces; track province) {
+                          <span class="province-tag">{{ getProvinceName(province) }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-muted">All provinces</span>
+                    }
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ user.is_active ? 'active' : 'inactive' }}">
+                      {{ user.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>{{ user.created_at | date:'short' }}</td>
+                  <td>
+                    <button 
+                      class="btn btn-sm btn-secondary"
+                      (click)="startEdit(user)"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                }
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="text-center">No users found</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>
+
