@@ -199,12 +199,15 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     const ctx = document.getElementById('genderChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    const total = this.genderStats.male + this.genderStats.female + this.genderStats.other;
+    const data = [this.genderStats.male, this.genderStats.female, this.genderStats.other];
+
     const config: ChartConfiguration = {
       type: 'pie',
       data: {
         labels: ['Male / पुरुष', 'Female / महिला', 'Other'],
         datasets: [{
-          data: [this.genderStats.male, this.genderStats.female, this.genderStats.other],
+          data: data,
           backgroundColor: ['#3b82f6', '#ec4899', '#6b7280'],
           borderWidth: 2,
           borderColor: '#fff'
@@ -215,11 +218,45 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map((label: string, i: number) => {
+                    const value = data.datasets[0].data[i];
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                    return {
+                      text: `${label}: ${value} (${percentage}%)`,
+                      fillStyle: data.datasets[0].backgroundColor[i],
+                      hidden: false,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              }
+            }
           },
           title: {
             display: true,
             text: 'Gender Distribution / लिङ्ग वितरण'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         }
       }
@@ -234,6 +271,7 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
 
     const labels = Object.keys(this.ageGroupStats);
     const data = labels.map(label => this.ageGroupStats[label]);
+    const total = data.reduce((sum, val) => sum + val, 0);
 
     const config: ChartConfiguration = {
       type: 'bar',
@@ -252,11 +290,46 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false
+            display: true,
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const labels = chart.data.labels;
+                const data = chart.data.datasets[0].data;
+                const total = data.reduce((sum: number, val: number) => sum + val, 0);
+                const legendItems = labels.map((label: string, i: number) => {
+                  const value = data[i];
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                  return {
+                    text: `${label}: ${value} (${percentage}%)`,
+                    fillStyle: '#10b981',
+                    hidden: false,
+                    index: i
+                  };
+                });
+                return legendItems;
+              }
+            }
           },
           title: {
             display: true,
             text: 'Age Group Distribution / उमेर समूह वितरण'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed.y || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         },
         scales: {
@@ -280,6 +353,9 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     const labels = Object.keys(this.ageGenderStats);
     const maleData = labels.map(label => this.ageGenderStats[label].male);
     const femaleData = labels.map(label => this.ageGenderStats[label].female);
+    const totalMale = maleData.reduce((sum, val) => sum + val, 0);
+    const totalFemale = femaleData.reduce((sum, val) => sum + val, 0);
+    const grandTotal = totalMale + totalFemale;
 
     const config: ChartConfiguration = {
       type: 'bar',
@@ -307,11 +383,52 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'top'
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const labels = chart.data.labels;
+                const datasets = chart.data.datasets;
+                const legendItems: any[] = [];
+                
+                // Create legend items for each age group showing both male and female
+                labels.forEach((label: string, i: number) => {
+                  const maleValue = datasets[0].data[i];
+                  const femaleValue = datasets[1].data[i];
+                  const groupTotal = maleValue + femaleValue;
+                  const percentage = grandTotal > 0 ? ((groupTotal / grandTotal) * 100).toFixed(1) : '0.0';
+                  
+                  legendItems.push({
+                    text: `${label}: M:${maleValue} F:${femaleValue} (${percentage}%)`,
+                    fillStyle: datasets[0].backgroundColor,
+                    hidden: false,
+                    index: i
+                  });
+                });
+                
+                return legendItems;
+              }
+            }
           },
           title: {
             display: true,
             text: 'Age Groups by Gender / लिङ्ग अनुसार उमेर समूह'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y || 0;
+                const datasetTotal = context.dataset.data.reduce((sum: number, val: number) => sum + val, 0);
+                const percentage = datasetTotal > 0 ? ((value / datasetTotal) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}% of ${label})`;
+              }
+            }
           }
         },
         scales: {
@@ -333,12 +450,15 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     const ctx = document.getElementById('maritalStatusChart') as HTMLCanvasElement;
     if (!ctx) return;
 
+    const total = this.maritalStats.married + this.maritalStats.single;
+    const data = [this.maritalStats.married, this.maritalStats.single];
+
     const config: ChartConfiguration = {
       type: 'doughnut',
       data: {
         labels: ['Married / विवाहित', 'Single / अविवाहित'],
         datasets: [{
-          data: [this.maritalStats.married, this.maritalStats.single],
+          data: data,
           backgroundColor: ['#8b5cf6', '#f59e0b'],
           borderWidth: 2,
           borderColor: '#fff'
@@ -349,11 +469,45 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map((label: string, i: number) => {
+                    const value = data.datasets[0].data[i];
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                    return {
+                      text: `${label}: ${value} (${percentage}%)`,
+                      fillStyle: data.datasets[0].backgroundColor[i],
+                      hidden: false,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              }
+            }
           },
           title: {
             display: true,
             text: 'Marital Status / वैवाहिक स्थिति'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         }
       }
@@ -369,6 +523,9 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
     const labels = Object.keys(this.ageGenderStats);
     const maleData = labels.map(label => -this.ageGenderStats[label].male); // Negative for left side
     const femaleData = labels.map(label => this.ageGenderStats[label].female); // Positive for right side
+    const totalMale = Math.abs(maleData.reduce((sum, val) => sum + val, 0));
+    const totalFemale = femaleData.reduce((sum, val) => sum + val, 0);
+    const grandTotal = totalMale + totalFemale;
 
     const config: ChartConfiguration = {
       type: 'bar',
@@ -397,7 +554,22 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'top'
+            position: 'top',
+            labels: {
+              generateLabels: (chart: any) => {
+                const datasets = chart.data.datasets;
+                return datasets.map((dataset: any, i: number) => {
+                  const total = Math.abs(dataset.data.reduce((sum: number, val: number) => sum + val, 0));
+                  const percentage = grandTotal > 0 ? ((total / grandTotal) * 100).toFixed(1) : '0.0';
+                  return {
+                    text: `${dataset.label}: ${total} (${percentage}%)`,
+                    fillStyle: dataset.backgroundColor,
+                    hidden: false,
+                    index: i
+                  };
+                });
+              }
+            }
           },
           title: {
             display: true,
@@ -405,9 +577,11 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
           },
           tooltip: {
             callbacks: {
-              label: (context) => {
+              label: (context: any) => {
                 const value = context.parsed.x !== null ? Math.abs(context.parsed.x) : 0;
-                return `${context.dataset.label}: ${value}`;
+                const datasetTotal = Math.abs(context.dataset.data.reduce((sum: number, val: number) => sum + val, 0));
+                const percentage = datasetTotal > 0 ? ((value / datasetTotal) * 100).toFixed(1) : '0.0';
+                return `${context.dataset.label}: ${value} (${percentage}% of ${context.dataset.label})`;
               }
             }
           }
@@ -437,6 +611,7 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
 
     if (labels.length === 0) return;
 
+    const total = data.reduce((sum, val) => sum + val, 0);
     const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6b7280'];
     
     const config: ChartConfiguration = {
@@ -455,11 +630,45 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map((label: string, i: number) => {
+                    const value = data.datasets[0].data[i];
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                    return {
+                      text: `${label}: ${value} (${percentage}%)`,
+                      fillStyle: data.datasets[0].backgroundColor[i],
+                      hidden: false,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              }
+            }
           },
           title: {
             display: true,
             text: 'Religion Distribution / धर्म वितरण (Pie Chart)'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         }
       }
@@ -479,6 +688,8 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
 
     if (labels.length === 0) return;
 
+    const total = data.reduce((sum, val) => sum + val, 0);
+
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
@@ -496,11 +707,46 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false
+            display: true,
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const labels = chart.data.labels;
+                const data = chart.data.datasets[0].data;
+                const total = data.reduce((sum: number, val: number) => sum + val, 0);
+                const legendItems = labels.map((label: string, i: number) => {
+                  const value = data[i];
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                  return {
+                    text: `${label}: ${value} (${percentage}%)`,
+                    fillStyle: '#8b5cf6',
+                    hidden: false,
+                    index: i
+                  };
+                });
+                return legendItems;
+              }
+            }
           },
           title: {
             display: true,
             text: 'Religion Distribution / धर्म वितरण (Bar Chart)'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed.y || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         },
         scales: {
@@ -529,6 +775,7 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
 
     if (labels.length === 0) return;
 
+    const total = data.reduce((sum, val) => sum + val, 0);
     const colors = [
       '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
       '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
@@ -550,11 +797,45 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            position: 'bottom'
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const data = chart.data;
+                if (data.labels.length && data.datasets.length) {
+                  return data.labels.map((label: string, i: number) => {
+                    const value = data.datasets[0].data[i];
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                    return {
+                      text: `${label}: ${value} (${percentage}%)`,
+                      fillStyle: data.datasets[0].backgroundColor[i],
+                      hidden: false,
+                      index: i
+                    };
+                  });
+                }
+                return [];
+              }
+            }
           },
           title: {
             display: true,
             text: 'Caste Distribution / जाति वितरण (Pie Chart - Top 10)'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         }
       }
@@ -575,6 +856,8 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
 
     if (labels.length === 0) return;
 
+    const total = data.reduce((sum, val) => sum + val, 0);
+
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
@@ -592,11 +875,46 @@ export class VoterStatistics implements OnInit, OnChanges, AfterViewInit, OnDest
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false
+            display: true,
+            position: 'bottom',
+            align: 'start',
+            labels: {
+              boxWidth: 10,
+              padding: 5,
+              font: {
+                size: 10
+              },
+              generateLabels: (chart: any) => {
+                const labels = chart.data.labels;
+                const data = chart.data.datasets[0].data;
+                const total = data.reduce((sum: number, val: number) => sum + val, 0);
+                const legendItems = labels.map((label: string, i: number) => {
+                  const value = data[i];
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                  return {
+                    text: `${label}: ${value} (${percentage}%)`,
+                    fillStyle: '#10b981',
+                    hidden: false,
+                    index: i
+                  };
+                });
+                return legendItems;
+              }
+            }
           },
           title: {
             display: true,
             text: 'Caste Distribution / जाति वितरण (Bar Chart - Top 15)'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context: any) => {
+                const label = context.label || '';
+                const value = context.parsed.y || 0;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
           }
         },
         scales: {

@@ -5,19 +5,31 @@
   box-shadow: var(--shadow-sm);
   z-index: 30;
   position: relative;
+  width: 100%;
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-4) var(--spacing-6);
-  gap: var(--spacing-6);
+  padding: 1em 1.5em;
+  gap: 1.5em;
   max-width: 100%;
+  flex-wrap: wrap;
+  
+  @media (max-width: 1024px) {
+    padding: 0.875em 1.25em;
+    gap: 1.25em;
+  }
   
   @media (max-width: 768px) {
-    padding: var(--spacing-3) var(--spacing-4);
-    gap: var(--spacing-4);
+    padding: 0.75em 1em;
+    gap: 1em;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.625em 0.75em;
+    gap: 0.75em;
   }
 }
 
@@ -25,9 +37,13 @@
 .header-brand {
   display: flex;
   align-items: center;
-  gap: var(--spacing-3);
+  gap: 0.75em;
   flex-shrink: 0;
   min-width: 0;
+  
+  @media (max-width: 480px) {
+    gap: 0.5em;
+  }
 }
 
 .logo {
@@ -35,6 +51,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  
+  svg {
+    width: 2em;
+    height: 2em;
+    
+    @media (max-width: 768px) {
+      width: 1.75em;
+      height: 1.75em;
+    }
+    
+    @media (max-width: 480px) {
+      width: 1.5em;
+      height: 1.5em;
+    }
+  }
 }
 
 .brand-text {
@@ -48,18 +79,30 @@
 }
 
 .app-title {
-  font-size: var(--font-size-xl);
+  font-size: 1.25em;
   font-weight: 700;
   color: var(--gray-900);
   margin: 0;
   line-height: 1.2;
+  
+  @media (max-width: 768px) {
+    font-size: 1.125em;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1em;
+  }
 }
 
 .app-subtitle {
-  font-size: var(--font-size-sm);
+  font-size: 0.875em;
   color: var(--gray-500);
   font-weight: 500;
   line-height: 1.2;
+  
+  @media (max-width: 768px) {
+    font-size: 0.75em;
+  }
 }
 
 // Search Section
@@ -134,8 +177,12 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: var(--spacing-3);
+  gap: 0.75em;
   flex-shrink: 0;
+  
+  @media (max-width: 480px) {
+    gap: 0.5em;
+  }
 }
 
 .mobile-menu-btn {
@@ -143,16 +190,25 @@
   border: none;
   color: var(--gray-600);
   cursor: pointer;
-  padding: var(--spacing-2);
+  padding: 0.5em;
   border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
   
+  svg {
+    width: 1.5em;
+    height: 1.5em;
+  }
+  
   &:hover {
     color: var(--gray-800);
     background-color: var(--gray-100);
+  }
+  
+  @media (min-width: 769px) {
+    display: none;
   }
 }
 
@@ -202,28 +258,55 @@
 .auth-section {
   display: flex;
   align-items: center;
-  gap: var(--spacing-3);
+  gap: 0.75em;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    gap: 0.5em;
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+  }
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-2);
+  gap: 0.5em;
+  flex-wrap: wrap;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375em;
+  }
 }
 
 .user-name {
-  font-size: var(--font-size-sm);
+  font-size: 0.875em;
   font-weight: 500;
   color: var(--gray-700);
+  
+  @media (max-width: 768px) {
+    font-size: 0.75em;
+  }
 }
 
 .user-role.badge {
   display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+  padding: 0.25em 0.5em;
+  border-radius: 0.75em;
+  font-size: 0.75em;
   font-weight: 600;
   text-transform: uppercase;
+  
+  @media (max-width: 768px) {
+    font-size: 0.625em;
+    padding: 0.2em 0.4em;
+  }
   
   &.badge-superadmin {
     background-color: #fed7d7;
@@ -242,10 +325,10 @@
 }
 
 .btn {
-  padding: var(--spacing-2) var(--spacing-4);
+  padding: 0.5em 1em;
   border: none;
   border-radius: var(--radius-lg);
-  font-size: var(--font-size-sm);
+  font-size: 0.875em;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -253,6 +336,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  
+  @media (max-width: 768px) {
+    font-size: 0.75em;
+    padding: 0.45em 0.875em;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.7em;
+    padding: 0.4em 0.75em;
+    width: 100%;
+  }
   
   &:disabled {
     opacity: 0.6;
@@ -291,42 +386,16 @@
 }
 
 .btn-sm {
-  padding: var(--spacing-1) var(--spacing-3);
-  font-size: var(--font-size-xs);
-}
-
-// Responsive adjustments
-@media (max-width: 1024px) {
-  .header-content {
-    gap: var(--spacing-4);
+  padding: 0.25em 0.75em;
+  font-size: 0.75em;
+  
+  @media (max-width: 768px) {
+    font-size: 0.7em;
+    padding: 0.225em 0.65em;
   }
   
-  .search-container {
-    padding: var(--spacing-2) var(--spacing-3);
-  }
-}
-
-@media (max-width: 768px) {
-  .app-title {
-    font-size: var(--font-size-lg);
-  }
-  
-  .app-subtitle {
-    font-size: var(--font-size-xs);
-  }
-}
-
-@media (max-width: 480px) {
-  .header-content {
-    padding: var(--spacing-2) var(--spacing-3);
-    gap: var(--spacing-2);
-  }
-  
-  .header-search {
-    min-width: 120px;
-  }
-  
-  .search-container {
-    padding: var(--spacing-1) var(--spacing-2);
+  @media (max-width: 480px) {
+    font-size: 0.65em;
+    padding: 0.2em 0.6em;
   }
 }
