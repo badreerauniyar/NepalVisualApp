@@ -209,6 +209,34 @@ export class AuthService {
   }
 
   /**
+   * Check if user exists in profiles table by email
+   * Queries profiles table directly (requires RLS policy for anonymous users)
+   */
+  async userExistsByEmail(email: string): Promise<boolean> {
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email.toLowerCase().trim())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking user existence:', error);
+        // If RLS blocks the query, assume user might exist and let resetPassword handle it
+        // This prevents revealing whether RLS is blocking vs user not existing
+        return true;
+      }
+
+      return data !== null;
+    } catch (error) {
+      console.error('Error checking user existence:', error);
+      // On error, assume user might exist and let resetPassword handle it
+      return true;
+    }
+  }
+
+  /**
    * Reset password (sends email)
    * Works from frontend - no backend needed!
    * Note: Requires proper configuration in Supabase Dashboard

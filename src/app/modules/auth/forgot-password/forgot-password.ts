@@ -55,6 +55,15 @@ export class ForgotPassword {
         return;
       }
 
+      // Check if user exists in profiles table
+      const userExists = await this.authService.userExistsByEmail(email);
+      
+      if (!userExists) {
+        this.errorMessage.set('No account found with this email address. Please check your email and try again.');
+        this.isLoading.set(false);
+        return;
+      }
+
       await this.authService.resetPassword(email);
       
       this.successMessage.set('Password reset email sent! Please check your inbox and follow the instructions to reset your password.');
