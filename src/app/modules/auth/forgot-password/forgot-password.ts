@@ -16,18 +16,32 @@ export class ForgotPassword {
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
+  isAuthenticated = signal(false);
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {
-    // Redirect if already logged in
-    if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/']);
+    // Check if user is already authenticated
+    this.isAuthenticated.set(this.authService.isAuthenticated());
+    
+    // If already logged in, show message and redirect
+    if (this.isAuthenticated()) {
+      this.errorMessage.set('You are already signed in. Please change your password from your account settings or sign out first.');
+      setTimeout(() => {
+        this.router.navigate(['/']);
+      }, 3000);
     }
   }
 
   async onSubmit() {
+    // Prevent password reset if user is already signed in
+    if (this.authService.isAuthenticated()) {
+      this.errorMessage.set('You are already signed in. Please change your password from your account settings or sign out first.');
+      this.router.navigate(['/']);
+      return;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set('');
     this.successMessage.set('');
@@ -49,6 +63,21 @@ export class ForgotPassword {
       this.errorMessage.set(error.message || 'Failed to send password reset email. Please try again.');
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  async signOut() {
+    try {
+      await this.authService.signOut();
+      // State will be cleared by authService, but update local state too
+      this.isAuthenticated.set(false);
+      this.errorMessage.set('');
+      this.successMessage.set('You have been signed out. You can now request a password reset.');
+    } catch (error: any) {
+      // Even if signOut fails, clear local state
+      this.isAuthenticated.set(false);
+      this.errorMessage.set('');
+      this.successMessage.set('You have been signed out. You can now request a password reset.');
     }
   }
 }

@@ -179,16 +179,33 @@ export class AuthService {
 
   /**
    * Sign out current user
+   * Handles cases where session is already expired or missing
    */
   async signOut() {
-    const { error } = await this.supabase.auth.signOut();
-    if (error) throw error;
-
-    this.currentUser.set(null);
-    this.currentSession.set(null);
-    this.userProfile.set(null);
-    
-    this.router.navigate(['/login']);
+    try {
+      // Check if we have a valid session before attempting server signout
+      const { data: { session } } = await this.supabase.auth.getSession();
+      
+      if (session) {
+        // Only call server signout if we have a valid session
+        const { error } = await this.supabase.auth.signOut();
+        if (error) {
+          // Log error but don't throw - we'll still clear local state
+          console.warn('Server signout failed (session may already be expired):', error.message);
+        }
+      }
+    } catch (error: any) {
+      // If getSession fails or signOut fails, log but continue
+      console.warn('Error during signout (clearing local state anyway):', error?.message || error);
+    } finally {
+      // Always clear local state regardless of server response
+      this.currentUser.set(null);
+      this.currentSession.set(null);
+      this.userProfile.set(null);
+      
+      // Navigate to login
+      this.router.navigate(['/login']);
+    }
   }
 
   /**

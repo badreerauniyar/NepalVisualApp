@@ -39,6 +39,12 @@ export class Header {
   }
 
   async logout() {
-    await this.authService.signOut();
+    try {
+      await this.authService.signOut();
+    } catch (error: any) {
+      // signOut now handles errors gracefully and clears local state
+      // This catch is just to prevent unhandled promise rejection
+      console.warn('Logout completed (with possible warnings):', error?.message || error);
+    }
   }
 }
