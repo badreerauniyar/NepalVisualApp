@@ -47,6 +47,13 @@ The Edge Function needs the service role key. Set it in your Supabase project:
 supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
+**Also set SITE_URL (optional but recommended):**
+```bash
+supabase secrets set SITE_URL=http://localhost:4200
+```
+
+Or in Dashboard: Add secret `SITE_URL` with value `http://localhost:4200` (or your production URL)
+
 ### 3. Verify Function is Deployed
 
 1. Go to **Edge Functions** in Supabase Dashboard
@@ -57,9 +64,9 @@ supabase secrets set SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 After deployment, try creating a user from the User Management page. The function will:
 - Verify the caller is a superadmin
-- Create the user in Supabase Auth
+- Create the user in Supabase Auth using `inviteUserByEmail` (sends email automatically)
 - Assign the specified role
-- Send a password reset email to the user
+- User receives an invitation email with a link to set their password
 
 ## How It Works
 

@@ -87,25 +87,22 @@ serve(async (req) => {
       }
     );
 
-    // Generate a random password (user will set their own via email)
-    const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12) + 'A1!';
-
-    // Create the user
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      password: randomPassword, // Temporary password, user will reset it
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
+    // Use inviteUserByEmail which creates user AND sends invitation email
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: {
         full_name: fullName,
       },
+      redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:4200'}/reset-password`,
     });
 
-    if (createError || !newUser.user) {
+    if (inviteError || !inviteData.user) {
       return new Response(
-        JSON.stringify({ error: createError?.message || 'Failed to create user' }),
+        JSON.stringify({ error: inviteError?.message || 'Failed to create user and send invitation' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const newUser = inviteData;
 
     // Assign role and provinces
     const { error: assignError } = await supabaseAdmin.rpc('assign_role_to_user', {
@@ -120,17 +117,6 @@ serve(async (req) => {
       // Continue anyway, role can be assigned manually later
     }
 
-    // Send password reset email so user can set their own password
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-    });
-
-    if (resetError) {
-      console.error('Failed to send password reset email:', resetError);
-      // User is created, but email might not be sent - this is not critical
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
@@ -139,7 +125,7 @@ serve(async (req) => {
           email: newUser.user.email,
           full_name: fullName,
         },
-        message: 'User created successfully. Password reset email sent.',
+        message: 'User created successfully. Invitation email sent.',
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
