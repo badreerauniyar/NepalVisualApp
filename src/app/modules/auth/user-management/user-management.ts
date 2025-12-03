@@ -241,5 +241,43 @@ export class UserManagement implements OnInit {
     const role = this.roles().find(r => r.id === roleId);
     return role ? role.role_name !== 'superadmin' : false;
   }
+
+  async deleteUser(user: User) {
+    // Prevent deleting yourself
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && user.id === currentUser.id) {
+      this.errorMessage.set('You cannot delete your own account');
+      return;
+    }
+
+    // Confirmation dialog
+    const confirmed = confirm(
+      `Are you sure you want to delete user "${user.email}"?\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    try {
+      await this.authService.deleteUser(user.id);
+      
+      this.successMessage.set(`User "${user.email}" deleted successfully!`);
+      await this.loadData();
+
+      setTimeout(() => {
+        this.successMessage.set('');
+      }, 3000);
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      this.errorMessage.set(error.message || 'Failed to delete user');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 }
 

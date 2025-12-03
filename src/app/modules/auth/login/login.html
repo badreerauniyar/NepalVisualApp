@@ -12,6 +12,12 @@
         </div>
       }
 
+      @if (successMessage()) {
+        <div class="alert alert-success" role="alert">
+          {{ successMessage() }}
+        </div>
+      }
+
       <div class="form-group">
         <label for="email">Email Address</label>
         <input

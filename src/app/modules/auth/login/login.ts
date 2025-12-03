@@ -16,6 +16,7 @@ export class Login {
   password = signal('');
   isLoading = signal(false);
   errorMessage = signal('');
+  successMessage = signal('');
   showPassword = signal(false);
 
   constructor(
@@ -25,6 +26,14 @@ export class Login {
     // Redirect if already logged in
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/']);
+    }
+
+    // Check if password reset was successful
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('passwordReset') === 'success') {
+      this.successMessage.set('Password reset successful! You can now login with your new password.');
+      // Clear URL params
+      this.router.navigate(['/login'], { replaceUrl: true });
     }
   }
 

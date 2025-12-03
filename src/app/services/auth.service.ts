@@ -193,18 +193,34 @@ export class AuthService {
 
   /**
    * Reset password (sends email)
+   * Works from frontend - no backend needed!
+   * Note: Requires proper configuration in Supabase Dashboard
    */
   async resetPassword(email: string) {
     const frontendUrl = getFrontendUrl();
-    const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+    
+    const { data, error } = await this.supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${frontendUrl}/reset-password`
     });
 
-    if (error) throw error;
+    if (error) {
+      // Provide more helpful error messages
+      const errorMsg = error.message.toLowerCase();
+      if (errorMsg.includes('rate limit') || errorMsg.includes('too many')) {
+        throw new Error('Too many password reset requests. Please wait a few minutes and try again.');
+      } else if (errorMsg.includes('redirect') || errorMsg.includes('url')) {
+        throw new Error('Invalid redirect URL configuration. Please contact administrator.');
+      } else if (errorMsg.includes('email') || errorMsg.includes('user')) {
+        throw new Error('Email not found. Please check your email address and try again.');
+      }
+      throw error;
+    }
+
+    return data;
   }
 
   /**
-   * Update password
+   * Update password (used after clicking reset link from email)
    */
   async updatePassword(newPassword: string) {
     const { error } = await this.supabase.auth.updateUser({
@@ -213,6 +229,7 @@ export class AuthService {
 
     if (error) throw error;
   }
+
 
   /**
    * Get all users (superadmin only)
@@ -312,6 +329,38 @@ export class AuthService {
   }
 
   /**
+   * Delete user (superadmin only)
+   * Uses Supabase Edge Function for secure user deletion
+   */
+  async deleteUser(userId: string) {
+    // Call the Edge Function
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (!session) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(`${environment.supabaseUrl}/functions/v1/delete-user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': environment.supabaseKey,
+      },
+      body: JSON.stringify({
+        userId,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to delete user');
+    }
+
+    return result;
+  }
+
+  /**
    * Check if user has access to a province
    */
   hasProvinceAccess(provinceCode: string): boolean {
@@ -337,6 +386,13 @@ export class AuthService {
    */
   getCurrentSession(): Session | null {
     return this.currentSession();
+  }
+
+  /**
+   * Get supabase client (for components that need direct access)
+   */
+  getSupabaseClient(): SupabaseClient {
+    return this.supabase;
   }
 }
 

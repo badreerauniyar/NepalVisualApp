@@ -197,12 +197,23 @@
                   </td>
                   <td>{{ user.created_at | date:'short' }}</td>
                   <td>
-                    <button 
-                      class="btn btn-sm btn-secondary"
-                      (click)="startEdit(user)"
-                    >
-                      Edit
-                    </button>
+                    <div class="action-buttons">
+                      <button 
+                        class="btn btn-sm btn-secondary"
+                        (click)="startEdit(user)"
+                        [disabled]="isLoading()"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        class="btn btn-sm btn-danger"
+                        (click)="deleteUser(user)"
+                        [disabled]="isLoading()"
+                        title="Delete user"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 }
               </tr>

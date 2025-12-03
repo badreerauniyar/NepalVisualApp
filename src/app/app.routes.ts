@@ -20,6 +20,16 @@ export const routes: Routes = [
     title: 'Login - Nepal Visual'
   },
   {
+    path: 'forgot-password',
+    loadComponent: () => import('./modules/auth/forgot-password/forgot-password').then(m => m.ForgotPassword),
+    title: 'Forgot Password - Nepal Visual'
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./modules/auth/reset-password/reset-password').then(m => m.ResetPassword),
+    title: 'Reset Password - Nepal Visual'
+  },
+  {
     path: 'admin/users',
     loadComponent: () => import('./modules/auth/user-management/user-management').then(m => m.UserManagement),
     title: 'User Management - Nepal Visual',

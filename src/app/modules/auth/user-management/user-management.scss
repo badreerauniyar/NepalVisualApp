@@ -142,9 +142,33 @@
   }
 }
 
+.btn-danger {
+  background-color: #fc8181;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #f56565;
+  }
+}
+
 .btn-sm {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
+}
+
+.btn-danger {
+  background-color: #fc8181;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #f56565;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .table-responsive {
