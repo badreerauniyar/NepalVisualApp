@@ -257,7 +257,14 @@ function parseTable(tableHtml) {
         rowObj.voter_id = voterNumberMatch[1];
       }
       if (voterNameMatch) {
-        rowObj.voter_name_clean = cleanText(voterNameMatch[1]);
+        const cleanedName = cleanText(voterNameMatch[1]);
+        rowObj.voter_name_clean = cleanedName;
+        // Also update voter_name if it's empty or invalid
+        const invalidValues = ['.', ',', '-', 'N/A', 'n/a', 'NA', 'na', '', 'null', 'undefined'];
+        if (!rowObj.voter_name || invalidValues.includes(rowObj.voter_name.trim())) {
+          rowObj.voter_name = cleanedName;
+          rowObj['मतदाताको नाम'] = cleanedName;
+        }
       }
       
       rows.push(rowObj);
@@ -366,12 +373,13 @@ const religionPatterns = {
     'विष्णु', 'vishnu', 'लक्ष्मी', 'laxmi', 'सीता', 'sita', 'पार्वती', 'parvati',
     'दुर्गा', 'durga', 'काली', 'kali', 'सरस्वती', 'saraswati','दास','तारा',
     'राम', 'रामचन्द्र', 'ramchandra', 'हनुमान', 'hanuman', 'राधा', 'radha',
-    'कुमार', 'kumar', 'prasad', 'प्रसाद', 'prashad','खङ्ग','भुजेल','तेली'
+    'कुमार', 'kumar', 'prasad', 'प्रसाद', 'prashad','खङ्ग','पासमान','भुजेल','तेली','कर्ण','भगत','मुखिया','मजुमदार','सुनार','सिंहदेव','सुनुवार','बगाले','बगाल','धोबी','धौबी','झा',
+'मिश्रा','खंग'
   ],
   'Muslim': [
     // Common Muslim surnames
-    'अलि', 'ali', 'अली', 'मोहमद', 'मो.', 'mohammad', 'mohamed', 'mohammed',
-    'हुसेन', 'hussain', 'हुसैन', 'राइन', 'राइन', 'खातुन', 'khatun',
+    'अलि','पैठान', 'ali', 'अली', 'मोहमद', 'मो.', 'mohammad', 'mohamed', 'mohammed','मंसुरी','बिबि',
+    'हुसेन', 'hussain', 'हुसैन', 'राइन', 'राइन', 'खातुन', 'khatun', 'खातनु', 'khatnu',
     'अकरम', 'akram', 'खाँ', 'खान', 'khan', 'शेख', 'sheikh',
     'मियाँ', 'miyan', 'मियां', 'हसन', 'hasan', 'हसन',
     'अहमद', 'ahmad', 'ahmed', 'रहमान', 'rahman', 'रशीद', 'rashid',
@@ -383,11 +391,11 @@ const religionPatterns = {
     'बेग', 'beg', 'बेगम', 'begum', 'फारुख', 'farooq', 'फारूक', 'faruk',
     'हमीद', 'hamid', 'हामिद', 'हसीब', 'haseeb', 'हसीब', 'haseeb',
     // Common Muslim first names
-    'मोहम्मद', 'मो.','mohammad', 'अहमद', 'ahmad', 'अली', 'ali', 'हसन', 'hasan',
+    'मोहम्मद', 'मो.','mohammad', 'अहमद', 'ahmad', 'अली', 'ali', 'हसन', 'hasan','मो','आरा',
     'हुसैन', 'hussain', 'इब्राहिम', 'ibrahim', 'इस्माइल', 'ismail',
     'युसुफ', 'yusuf', 'हामिद', 'hamid', 'रशीद', 'rashid', 'सलीम', 'salim',
     'करीम', 'हजरत' ,'उमर','नुर', 'महमद','karim', 'रहीम', 'rahim', 'नबी', 'nabi', 'रसूल', 'rasul',
-    'ईसलाम', 'islam','विवि','सहादत','कुजर्नी','तस्लीम','मिया',
+    'ईसलाम', 'islam','विवि','सहादत','कुजर्नी','तस्लीम','मिया','सेख','साइदा',
   ],
   'Buddhist': ['लामा', 'lama', 'तामाङ', 'tamang', 'शेर्पा', 'sherpa', 'गुरुङ', 'gurung', 'बुद्ध', 'buddha', 'साक्य', 'shakya'],
   'Christian': ['पीटर', 'peter', 'पॉल', 'paul', 'जॉन', 'john', 'मारिया', 'maria', 'मैरी', 'mary'],
@@ -398,21 +406,77 @@ const religionPatterns = {
  * Extract caste from name - uses the last name (surname) as caste
  */
 function extractCaste(name) {
-  if (!name) return null;
+  // Debug logging for specific name
+  if (name && name.includes('उर्मिला देवी')) {
+    log(`\n🔍 DEBUG extractCaste: Called with name: "${name}"`, 'cyan');
+  }
   
-  // Split name by spaces and get the last word (surname)
-  const nameParts = name.trim().split(/\s+/);
-  
-  if (nameParts.length === 0) {
+  if (!name) {
+    if (name && name.includes('उर्मिला देवी')) {
+      log(`  ❌ Name is empty/null`, 'yellow');
+    }
     return null;
   }
   
-  // Get the last part (surname)
+  // Clean and trim the name, remove trailing dashes and other invalid characters
+  let cleanedName = name.trim();
+  // Remove trailing dashes, commas, periods, and other invalid characters
+  cleanedName = cleanedName.replace(/[\s\-\.\,]+$/, '').trim();
+  
+  if (name.includes('उर्मिला देवी')) {
+    log(`  ✓ Cleaned name: "${cleanedName}"`, 'cyan');
+  }
+  
+  // Filter out invalid values
+  const invalidValues = ['.',',','-', 'N/A', 'n/a', 'NA', 'na', '', 'null', 'undefined'];
+  if (invalidValues.includes(cleanedName)) {
+    if (name.includes('उर्मिला देवी')) {
+      log(`  ❌ Name is in invalid values list`, 'yellow');
+    }
+    return null;
+  }
+  
+  // Split name by spaces and filter out invalid parts
+  const nameParts = cleanedName.split(/\s+/)
+    .map(part => part.trim())
+    .filter(part => part.length > 0 && !invalidValues.includes(part));
+  
+  if (name.includes('उर्मिला देवी')) {
+    log(`  ✓ Name parts (after filtering): [${nameParts.join(', ')}]`, 'cyan');
+  }
+  
+  if (nameParts.length === 0) {
+    if (name.includes('उर्मिला देवी')) {
+      log(`  ❌ No valid name parts found`, 'yellow');
+    }
+    return null;
+  }
+  
+  // Get the last valid part (surname)
   const surname = nameParts[nameParts.length - 1].trim();
+  
+  if (name.includes('उर्मिला देवी')) {
+    log(`  ✓ Extracted surname: "${surname}"`, 'cyan');
+  }
+  
+  // Final validation: filter out invalid surname values
+  if (invalidValues.includes(surname) || !surname || surname.length < 2) {
+    if (name.includes('उर्मिला देवी')) {
+      log(`  ❌ Surname is invalid or too short`, 'yellow');
+    }
+    return null;
+  }
   
   // Return null if surname is empty or too short (less than 2 characters)
   if (!surname || surname.length < 2) {
+    if (name.includes('उर्मिला देवी')) {
+      log(`  ❌ Surname is empty or too short (length: ${surname ? surname.length : 0})`, 'yellow');
+    }
     return null;
+  }
+  
+  if (name.includes('उर्मिला देवी')) {
+    log(`  ✅ Returning caste: "${surname}"`, 'green');
   }
   
   return surname;
@@ -426,35 +490,63 @@ function extractReligion(name) {
   
   const nameLower = name.toLowerCase();
   
-  // console.log("religionPatterns['Hindu']", religionPatterns['Hindu']);
-  for (const pattern of religionPatterns['Hindu']) {
-    if (nameLower.includes(pattern.toLowerCase())) {
-      return 'Hindu';
+  // Debug logging for specific names
+  const debugNames = ['आलम', 'खातनु', 'सुवि खातनु'];
+  const shouldDebug = debugNames.some(debugName => name.includes(debugName));
+  
+  if (shouldDebug) {
+    log(`\n🔍 DEBUG extractReligion: Called with name: "${name}"`, 'cyan');
+    log(`  Lowercase name: "${nameLower}"`, 'cyan');
+  }
+  
+  // Check Muslim patterns FIRST (most distinct, should override Hindu)
+  // This is important because Muslim names are more specific
+  for (const pattern of religionPatterns['Muslim']) {
+    const patternLower = pattern.toLowerCase();
+    if (nameLower.includes(patternLower)) {
+      if (shouldDebug) {
+        log(`  ✅ Found Muslim pattern: "${pattern}"`, 'green');
+      }
+      return 'Muslim';
     }
   }
-  // Check Muslim patterns first (most distinct)
-  for (const pattern of religionPatterns['Muslim']) {
-    if (nameLower.includes(pattern.toLowerCase())) {
-      return 'Muslim';
+  
+  // Then check Hindu patterns
+  for (const pattern of religionPatterns['Hindu']) {
+    const patternLower = pattern.toLowerCase();
+    if (nameLower.includes(patternLower)) {
+      if (shouldDebug) {
+        log(`  ✅ Found Hindu pattern: "${pattern}"`, 'green');
+      }
+      return 'Hindu';
     }
   }
   
   // Check Buddhist patterns
   for (const pattern of religionPatterns['Buddhist']) {
-    if (nameLower.includes(pattern.toLowerCase())) {
+    const patternLower = pattern.toLowerCase();
+    if (nameLower.includes(patternLower)) {
+      if (shouldDebug) {
+        log(`  ✅ Found Buddhist pattern: "${pattern}"`, 'green');
+      }
       return 'Buddhist';
     }
   }
   
   // Check Christian patterns
   for (const pattern of religionPatterns['Christian']) {
-    if (nameLower.includes(pattern.toLowerCase())) {
+    const patternLower = pattern.toLowerCase();
+    if (nameLower.includes(patternLower)) {
+      if (shouldDebug) {
+        log(`  ✅ Found Christian pattern: "${pattern}"`, 'green');
+      }
       return 'Christian';
     }
   }
   
-  // Check Hindu patterns (most common in Nepal)
-  
+  if (shouldDebug) {
+    log(`  ❌ No religion pattern found, returning Unknown`, 'yellow');
+  }
   
   return 'Unknown';
 }
@@ -467,12 +559,32 @@ function analyzeVoter(voter) {
   const name = voter.full_name || voter.full_name_english || '';
   const fatherName = voter.father_mother_name || '';
   
+  // Debug logging for specific names
+  const debugNames = ['उर्मिला देवी', 'आलम', 'खातनु', 'सुवि खातनु'];
+  const shouldDebug = debugNames.some(debugName => name.includes(debugName) || fatherName.includes(debugName));
+  
+  if (shouldDebug) {
+    log(`\n🔍 DEBUG: analyzeVoter called`, 'cyan');
+    log(`  Name: "${name}"`, 'cyan');
+    log(`  Father/Mother name: "${fatherName}"`, 'cyan');
+  }
+  
   // For caste, use the last name from the voter's own name (not father's name)
   const caste = extractCaste(name);
+  
+  if (shouldDebug) {
+    log(`  Extracted caste: "${caste}"`, caste ? 'green' : 'yellow');
+  }
   
   // For religion, combine names for better analysis
   const combinedName = `${name} ${fatherName}`.trim();
   const religion = extractReligion(combinedName);
+  
+  if (shouldDebug) {
+    log(`  Combined name for religion: "${combinedName}"`, 'cyan');
+    log(`  Extracted religion: "${religion}"`, 'cyan');
+    log(`  Final result: { caste: "${caste}", religion: "${religion}" }`, 'green');
+  }
   
   return { caste, religion };
 }
@@ -834,26 +946,57 @@ async function importVoters(pollingCenterId, votersData) {
     const voters = batch.map(record => {
       const voterNumber = record.voter_number || record['मतदाता नं'] || record.voter_id;
       const serialNumber = record.serial_number || record['सि.नं.'];
-      const fullName = record.voter_name || record['मतदाताको नाम'];
+      // Try multiple name fields, prefer voter_name_clean (from <a> tag) if available
+      const fullName = record.voter_name_clean || record.voter_name || record['मतदाताको नाम'] || '';
       const age = record.age || record['उमेर(वर्ष)'];
       const gender = record.gender || record['लिङ्ग'];
       const spouseName = record.spouse_name || record['पति/पत्नीको नाम'];
       const fatherMotherName = record.father_mother_name || record['पिता/माताको नाम'];
       
-      // Use already-calculated religion and caste from the record (if available)
+      // Filter out invalid values
+      const invalidValues = ['.', ',', '-', 'N/A', 'n/a', 'NA', 'na', '', 'null', 'undefined'];
+      
+      // Use already-calculated religion and caste from the record (if available and valid)
       // Otherwise, analyze the name (fallback for backward compatibility)
       let caste = record.caste;
       let religion = record.religion;
       
-      if (!caste || !religion) {
+      // Filter out invalid caste values - treat invalid as non-existent
+      if (caste && invalidValues.includes(caste.trim())) {
+        caste = null;
+      }
+      
+      // Filter out invalid religion values
+      if (religion && invalidValues.includes(religion.trim())) {
+        religion = null;
+      }
+      
+      // Re-analyze if caste or religion is missing or invalid, or if name is valid
+      const isValidName = fullName && !invalidValues.includes(fullName.trim()) && fullName.trim().length > 0;
+      if (isValidName && (!caste || !religion)) {
         const voterForAnalysis = {
           full_name: fullName,
           full_name_english: null,
           father_mother_name: fatherMotherName
         };
         const analysis = analyzeVoter(voterForAnalysis);
-        caste = caste || analysis.caste;  // Caste is now the surname directly (or null)
-        religion = religion || (analysis.religion !== 'Unknown' ? analysis.religion : null);
+        // Only use analysis if we don't have a valid caste/religion already
+        if (!caste && analysis.caste && !invalidValues.includes(analysis.caste.trim())) {
+          caste = analysis.caste;
+        }
+        if (!religion && analysis.religion && analysis.religion !== 'Unknown') {
+          religion = analysis.religion;
+        }
+      }
+      
+      // Final validation: ensure caste is not an invalid value
+      if (caste && invalidValues.includes(caste.trim())) {
+        caste = null;
+      }
+      
+      // Final validation: ensure religion is not an invalid value
+      if (religion && invalidValues.includes(religion.trim())) {
+        religion = null;
       }
       
       return {
@@ -922,9 +1065,33 @@ async function extractAndImport(phpFile) {
     
     // Step 3.5: Analyze names and add religion/caste to each record
     log('\n🔍 Step 3.5: Analyzing names for religion and caste...', 'cyan');
+    const invalidValues = ['.', ',', '-', 'N/A', 'n/a', 'NA', 'na', '', 'null', 'undefined'];
     tableData.data = tableData.data.map(record => {
-      const fullName = record.voter_name || record['मतदाताको नाम'] || '';
+      // Try multiple name fields, prefer voter_name_clean (from <a> tag) if available
+      const fullName = record.voter_name_clean || record.voter_name || record['मतदाताको नाम'] || '';
       const fatherMotherName = record.father_mother_name || record['पिता/माताको नाम'] || '';
+      
+      // Debug logging for specific name
+      if (fullName && fullName.includes('उर्मिला देवी')) {
+        log(`\n🔍 DEBUG Step 3.5: Processing record`, 'cyan');
+        log(`  voter_name_clean: "${record.voter_name_clean || 'N/A'}"`, 'cyan');
+        log(`  voter_name: "${record.voter_name || 'N/A'}"`, 'cyan');
+        log(`  मतदाताको नाम: "${record['मतदाताको नाम'] || 'N/A'}"`, 'cyan');
+        log(`  Selected fullName: "${fullName}"`, 'cyan');
+        log(`  Father/Mother name: "${fatherMotherName}"`, 'cyan');
+      }
+      
+      // Skip analysis if name is invalid
+      if (!fullName || invalidValues.includes(fullName.trim())) {
+        if (fullName && fullName.includes('उर्मिला देवी')) {
+          log(`  ❌ Skipping analysis - name is invalid`, 'yellow');
+        }
+        return {
+          ...record,
+          religion: null,
+          caste: null
+        };
+      }
       
       const voterForAnalysis = {
         full_name: fullName,
@@ -934,11 +1101,28 @@ async function extractAndImport(phpFile) {
       
       const { caste, religion } = analyzeVoter(voterForAnalysis);
       
+      if (fullName && fullName.includes('उर्मिला देवी')) {
+        log(`  Raw caste from analysis: "${caste}"`, 'cyan');
+      }
+      
+      // Validate caste - ensure it's not an invalid value
+      let validCaste = caste;
+      if (caste && invalidValues.includes(caste.trim())) {
+        if (fullName && fullName.includes('उर्मिला देवी')) {
+          log(`  ❌ Caste is invalid, setting to null`, 'yellow');
+        }
+        validCaste = null;
+      }
+      
+      if (fullName && fullName.includes('उर्मिला देवी')) {
+        log(`  Final caste for record: "${validCaste || null}"`, validCaste ? 'green' : 'yellow');
+      }
+      
       // Add religion and caste to the record
       return {
         ...record,
         religion: religion !== 'Unknown' ? religion : null,
-        caste: caste || null  // Caste is now the surname directly (or null)
+        caste: validCaste || null  // Caste is now the surname directly (or null)
       };
     });
     log(`✓ Analyzed ${tableData.data.length} records`, 'green');

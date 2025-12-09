@@ -5,7 +5,7 @@
       <input 
         type="text" 
         class="form-control"
-        placeholder="Search by name or voter ID..."
+        placeholder="Search by name, voter ID, religion, or caste..."
         [(ngModel)]="searchTerm"
         (input)="onSearchChange()">
     </div>
@@ -79,12 +79,18 @@
           <th (click)="onSort('age')" class="sortable">
             Age / उमेर {{ getSortIcon('age') }}
           </th>
+          <th (click)="onSort('religion')" class="sortable">
+            Religion / धर्म {{ getSortIcon('religion') }}
+          </th>
+          <th (click)="onSort('caste')" class="sortable">
+            Caste / जात {{ getSortIcon('caste') }}
+          </th>
         </tr>
       </thead>
       <tbody>
         @if (displayedVoters.length === 0) {
           <tr>
-            <td colspan="7" class="text-center text-muted">
+            <td colspan="9" class="text-center text-muted">
               No voters found
             </td>
           </tr>
@@ -124,6 +130,8 @@
                 }
               </td>
               <td>{{ voter.age }}</td>
+              <td>{{ voter.religion || '-' }}</td>
+              <td>{{ voter.caste || '-' }}</td>
             </tr>
           }
         }

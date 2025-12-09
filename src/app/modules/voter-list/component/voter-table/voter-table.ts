@@ -106,7 +106,9 @@ export class VoterTable implements OnInit, OnChanges {
       filtered = filtered.filter(v => 
         v.full_name?.toLowerCase().includes(term) ||
         v.voter_id?.toLowerCase().includes(term) ||
-        v.full_name_english?.toLowerCase().includes(term)
+        v.full_name_english?.toLowerCase().includes(term) ||
+        v.religion?.toLowerCase().includes(term) ||
+        v.caste?.toLowerCase().includes(term)
       );
     }
 
