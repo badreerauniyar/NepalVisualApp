@@ -25,8 +25,8 @@ export class VoterList implements OnInit {
   }
 
   async onFiltersSelected(filters: FilterSelection) {
-    if (!filters.pollingCenterId) {
-      this.error = 'Please select a polling center';
+    if (!filters.pollingCenterIds || filters.pollingCenterIds.length === 0) {
+      this.error = 'Please select at least one polling center';
       return;
     }
 
@@ -36,8 +36,8 @@ export class VoterList implements OnInit {
 
     try {
       // First, get the total count
-      const countResult = await this.supabaseService.getVotersByPollingCenter(
-        filters.pollingCenterId,
+      const countResult = await this.supabaseService.getVotersByPollingCenters(
+        filters.pollingCenterIds,
         {
           limit: 1,
           offset: 0,
@@ -55,8 +55,8 @@ export class VoterList implements OnInit {
       let offset = 0;
       
       while (offset < totalCount) {
-        const batchResult = await this.supabaseService.getVotersByPollingCenter(
-          filters.pollingCenterId,
+        const batchResult = await this.supabaseService.getVotersByPollingCenters(
+          filters.pollingCenterIds,
           {
             limit: batchSize,
             offset: offset,

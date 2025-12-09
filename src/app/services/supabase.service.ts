@@ -431,6 +431,109 @@ export class SupabaseService {
   }
 
   /**
+   * Get voters by multiple polling centers with filters
+   */
+  async getVotersByPollingCenters(
+    pollingCenterIds: number[],
+    options: {
+      searchTerm?: string;
+      gender?: string;
+      minAge?: number;
+      maxAge?: number;
+      limit?: number;
+      offset?: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    } = {}
+  ) {
+    if (!this.supabase) {
+      throw new Error('Supabase not initialized. Check environment variables.');
+    }
+
+    if (!pollingCenterIds || pollingCenterIds.length === 0) {
+      return {
+        data: [],
+        count: 0
+      };
+    }
+
+    const {
+      searchTerm = '',
+      gender,
+      minAge,
+      maxAge,
+      limit = 100,
+      offset = 0,
+      sortBy = 'serial_number',
+      sortOrder = 'asc'
+    } = options;
+
+    let query = this.supabase
+      .from('voters')
+      .select(`
+        *,
+        polling_centers!inner (
+          id,
+          nepali_name,
+          english_name,
+          wards!inner (
+            id,
+            ward_number,
+            municipalities!inner (
+              id,
+              nepali_name,
+              districts!inner (
+                id,
+                nepali_name,
+                provinces!inner (
+                  id,
+                  nepali_name
+                )
+              )
+            )
+          )
+        )
+      `, { count: 'exact' })
+      .in('polling_center_id', pollingCenterIds);
+
+    // Apply search filter
+    if (searchTerm) {
+      query = query.or(`full_name.ilike.%${searchTerm}%,voter_id.eq.${searchTerm},full_name_english.ilike.%${searchTerm}%`);
+    }
+
+    // Apply gender filter
+    if (gender) {
+      query = query.eq('gender', gender);
+    }
+
+    // Apply age filters
+    if (minAge !== undefined) {
+      query = query.gte('age', minAge);
+    }
+    if (maxAge !== undefined) {
+      query = query.lte('age', maxAge);
+    }
+
+    // Apply sorting
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+    // Apply pagination
+    query = query.range(offset, offset + limit - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error('Error fetching voters:', error);
+      throw error;
+    }
+
+    return {
+      data: data || [],
+      count: count || 0
+    };
+  }
+
+  /**
    * Get voters count by polling center (for statistics)
    */
   async getVotersCountByPollingCenter(pollingCenterId: number) {

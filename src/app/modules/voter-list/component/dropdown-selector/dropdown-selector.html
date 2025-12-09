@@ -47,68 +47,199 @@
     <!-- Municipality -->
     <div class="form-group">
       <label for="municipality">Municipality / नगरपालिका</label>
-      <select 
-        id="municipality" 
-        class="form-control"
-        [(ngModel)]="selectedMunicipalityId"
-        (change)="onMunicipalityChange()"
-        [disabled]="!selectedDistrictId || loadingMunicipalities">
-        <option [value]="null">Select Municipality</option>
-        @for (municipality of municipalities; track municipality.id) {
-          <option [value]="municipality.id">
-            {{ municipality.nepali_name }} ({{ municipality.english_name }})
-          </option>
-        }
-      </select>
       @if (loadingMunicipalities) {
         <small class="text-muted">Loading...</small>
+      } @else {
+        <div class="multiselect-container">
+          <button 
+            type="button"
+            class="multiselect-button"
+            (click)="toggleMunicipalityDropdown()"
+            [disabled]="!selectedDistrictId || loadingMunicipalities">
+            <span class="button-text">{{ getMunicipalityButtonText() }}</span>
+            <span class="button-icon" [class.open]="isMunicipalityDropdownOpen">▼</span>
+          </button>
+          @if (isMunicipalityDropdownOpen) {
+            <div class="multiselect-dropdown">
+              <div class="multiselect-header">
+                <input 
+                  type="text" 
+                  class="form-control search-input"
+                  placeholder="Search municipalities..."
+                  [(ngModel)]="municipalitySearchTerm"
+                  (input)="filterMunicipalities()"
+                  [disabled]="!selectedDistrictId || loadingMunicipalities">
+              </div>
+              <div class="multiselect-options">
+                <label class="multiselect-option select-all-option" 
+                       [class.disabled]="filteredMunicipalities.length === 0">
+                  <input 
+                    type="checkbox"
+                    [checked]="areAllMunicipalitiesSelected()"
+                    (change)="areAllMunicipalitiesSelected() ? deselectAllMunicipalities() : selectAllMunicipalities()"
+                    [disabled]="filteredMunicipalities.length === 0">
+                  <span>
+                    @if (areAllMunicipalitiesSelected()) {
+                      Deselect All
+                    } @else {
+                      Select All
+                    }
+                  </span>
+                </label>
+                @if (filteredMunicipalities.length === 0) {
+                  <div class="no-results">No municipalities found</div>
+                } @else {
+                  @for (municipality of filteredMunicipalities; track municipality.id) {
+                    <label class="multiselect-option">
+                      <input 
+                        type="checkbox"
+                        [checked]="isMunicipalitySelected(municipality.id)"
+                        (change)="toggleMunicipality(municipality.id)"
+                        [disabled]="!selectedDistrictId">
+                      <span>{{ municipality.nepali_name }} ({{ municipality.english_name }})</span>
+                    </label>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
 
     <!-- Ward -->
     <div class="form-group">
       <label for="ward">Ward / वडा</label>
-      <select 
-        id="ward" 
-        class="form-control"
-        [(ngModel)]="selectedWardId"
-        (change)="onWardChange()"
-        [disabled]="!selectedMunicipalityId || loadingWards">
-        <option [value]="null">Select Ward</option>
-        @for (ward of wards; track ward.id) {
-          <option [value]="ward.id">
-            Ward {{ ward.ward_number }} 
-            @if (ward.nepali_name) {
-              ({{ ward.nepali_name }})
-            }
-          </option>
-        }
-      </select>
       @if (loadingWards) {
         <small class="text-muted">Loading...</small>
+      } @else {
+        <div class="multiselect-container">
+          <button 
+            type="button"
+            class="multiselect-button"
+            (click)="toggleWardDropdown()"
+            [disabled]="selectedMunicipalityIds.length === 0 || loadingWards">
+            <span class="button-text">{{ getWardButtonText() }}</span>
+            <span class="button-icon" [class.open]="isWardDropdownOpen">▼</span>
+          </button>
+          @if (isWardDropdownOpen) {
+            <div class="multiselect-dropdown">
+              <div class="multiselect-header">
+                <input 
+                  type="text" 
+                  class="form-control search-input"
+                  placeholder="Search wards..."
+                  [(ngModel)]="wardSearchTerm"
+                  (input)="filterWards()"
+                  [disabled]="selectedMunicipalityIds.length === 0 || loadingWards">
+              </div>
+              <div class="multiselect-options">
+                <label class="multiselect-option select-all-option" 
+                       [class.disabled]="filteredWards.length === 0">
+                  <input 
+                    type="checkbox"
+                    [checked]="areAllWardsSelected()"
+                    (change)="areAllWardsSelected() ? deselectAllWards() : selectAllWards()"
+                    [disabled]="filteredWards.length === 0">
+                  <span>
+                    @if (areAllWardsSelected()) {
+                      Deselect All
+                    } @else {
+                      Select All
+                    }
+                  </span>
+                </label>
+                @if (filteredWards.length === 0) {
+                  <div class="no-results">No wards found</div>
+                } @else {
+                  @for (ward of filteredWards; track ward.id) {
+                    <label class="multiselect-option">
+                      <input 
+                        type="checkbox"
+                        [checked]="isWardSelected(ward.id)"
+                        (change)="toggleWard(ward.id)"
+                        [disabled]="selectedMunicipalityIds.length === 0">
+                      <span>
+                        Ward {{ ward.ward_number }} 
+                        @if (ward.nepali_name) {
+                          ({{ ward.nepali_name }})
+                        }
+                      </span>
+                    </label>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
 
     <!-- Polling Center -->
     <div class="form-group">
       <label for="pollingCenter">Polling Center / मतदान केन्द्र</label>
-      <select 
-        id="pollingCenter" 
-        class="form-control"
-        [(ngModel)]="selectedPollingCenterId"
-        [disabled]="!selectedWardId || loadingPollingCenters">
-        <option [value]="null">Select Polling Center</option>
-        @for (center of pollingCenters; track center.id) {
-          <option [value]="center.id">
-            {{ center.nepali_name }}
-            @if (center.english_name) {
-              ({{ center.english_name }})
-            }
-          </option>
-        }
-      </select>
       @if (loadingPollingCenters) {
         <small class="text-muted">Loading...</small>
+      } @else {
+        <div class="multiselect-container">
+          <button 
+            type="button"
+            class="multiselect-button"
+            (click)="togglePollingCenterDropdown()"
+            [disabled]="selectedWardIds.length === 0 || loadingPollingCenters">
+            <span class="button-text">{{ getPollingCenterButtonText() }}</span>
+            <span class="button-icon" [class.open]="isPollingCenterDropdownOpen">▼</span>
+          </button>
+          @if (isPollingCenterDropdownOpen) {
+            <div class="multiselect-dropdown">
+              <div class="multiselect-header">
+                <input 
+                  type="text" 
+                  class="form-control search-input"
+                  placeholder="Search polling centers..."
+                  [(ngModel)]="pollingCenterSearchTerm"
+                  (input)="filterPollingCenters()"
+                  [disabled]="selectedWardIds.length === 0 || loadingPollingCenters">
+              </div>
+              <div class="multiselect-options">
+                <label class="multiselect-option select-all-option" 
+                       [class.disabled]="filteredPollingCenters.length === 0">
+                  <input 
+                    type="checkbox"
+                    [checked]="areAllPollingCentersSelected()"
+                    (change)="areAllPollingCentersSelected() ? deselectAllPollingCenters() : selectAllPollingCenters()"
+                    [disabled]="filteredPollingCenters.length === 0">
+                  <span>
+                    @if (areAllPollingCentersSelected()) {
+                      Deselect All
+                    } @else {
+                      Select All
+                    }
+                  </span>
+                </label>
+                @if (filteredPollingCenters.length === 0) {
+                  <div class="no-results">No polling centers found</div>
+                } @else {
+                  @for (center of filteredPollingCenters; track center.id) {
+                    <label class="multiselect-option">
+                      <input 
+                        type="checkbox"
+                        [checked]="isPollingCenterSelected(center.id)"
+                        (change)="togglePollingCenter(center.id)"
+                        [disabled]="selectedWardIds.length === 0">
+                      <span>
+                        {{ center.nepali_name }}
+                        @if (center.english_name) {
+                          ({{ center.english_name }})
+                        }
+                      </span>
+                    </label>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
       }
     </div>
   </div>
@@ -118,7 +249,7 @@
       type="button" 
       class="btn btn-primary"
       (click)="onSubmit()"
-      [disabled]="!selectedPollingCenterId">
+      [disabled]="selectedPollingCenterIds.length === 0">
       Search Voters
     </button>
     <button 
