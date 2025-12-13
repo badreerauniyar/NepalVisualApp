@@ -26,14 +26,35 @@
     </div>
   }
 
+  <!-- Download PDF Button -->
+  @if (!loading && !error && voters.length > 0) {
+    <div class="download-pdf-section">
+      <button 
+        class="btn btn-primary btn-download-pdf"
+        (click)="downloadPDF()"
+        [disabled]="isGeneratingPDF">
+        @if (isGeneratingPDF) {
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Generating PDF...
+        } @else {
+          📄 Download PDF
+        }
+      </button>
+    </div>
+  }
+
   <!-- Voter Statistics -->
   @if (!loading && !error && voters.length > 0) {
-    <app-voter-statistics [voters]="voters"></app-voter-statistics>
+    <div #voterStatisticsSection>
+      <app-voter-statistics [voters]="voters"></app-voter-statistics>
+    </div>
   }
 
   <!-- Voter Table Child -->
   @if (!loading && !error && voters.length > 0) {
-    <app-voter-table [voters]="voters"></app-voter-table>
+    <div #voterTableSection>
+      <app-voter-table [voters]="voters" #voterTable></app-voter-table>
+    </div>
   }
 
   <!-- Empty State -->
