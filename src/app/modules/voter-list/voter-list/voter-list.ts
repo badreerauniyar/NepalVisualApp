@@ -222,25 +222,50 @@ export class VoterList implements OnInit {
       ];
 
       // Capture and add each chart individually on separate pages
-      for (const chartId of chartIds) {
+      for (let i = 0; i < chartIds.length; i++) {
+        const chartId = chartIds[i];
         const canvasElement = document.getElementById(chartId) as HTMLCanvasElement;
         if (!canvasElement) continue;
 
-        // Find the parent chart-card element
+        // Find the parent chart-card element for labels/title
         const chartCard = canvasElement.closest('.chart-card') as HTMLElement;
         if (!chartCard) continue;
 
-        // Capture the chart card (includes chart and any labels)
-        const chartCanvas = await html2canvas(chartCard, {
-          scale: 2,
-          useCORS: true,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
+        // Add small delay between captures to reduce Canvas2D readback frequency
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        // Try to get chart image directly from canvas first (faster, no getImageData warnings)
+        let chartImgData: string;
+        let chartWidth: number;
+        let chartHeight: number;
+
+        try {
+          // Direct canvas to image conversion (no html2canvas needed, eliminates warnings)
+          chartImgData = canvasElement.toDataURL('image/png', 1.0);
+          chartWidth = canvasElement.width;
+          chartHeight = canvasElement.height;
+        } catch (e) {
+          // Fallback to html2canvas if direct conversion fails
+          console.warn(`Direct canvas conversion failed for ${chartId}, using html2canvas fallback`);
+          const chartCanvas = await html2canvas(chartCard, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            removeContainer: true,
+            allowTaint: false,
+            imageTimeout: 15000
+          });
+          chartImgData = chartCanvas.toDataURL('image/png');
+          chartWidth = chartCanvas.width;
+          chartHeight = chartCanvas.height;
+        }
 
         // Calculate dimensions to fit A4 page while maintaining aspect ratio
         const chartImgWidth = contentWidth;
-        const chartImgHeight = (chartCanvas.height * chartImgWidth) / chartCanvas.width;
+        const chartImgHeight = (chartHeight * chartImgWidth) / chartWidth;
         const maxHeight = pageHeight - margin * 2 - footerHeight;
         
         // If chart is too tall, scale it down
@@ -248,7 +273,7 @@ export class VoterList implements OnInit {
         let finalHeight = chartImgHeight;
         if (finalHeight > maxHeight) {
           finalHeight = maxHeight;
-          finalWidth = (chartCanvas.width * finalHeight) / chartCanvas.height;
+          finalWidth = (chartWidth * finalHeight) / chartHeight;
         }
 
         // Add new page for this chart
@@ -259,7 +284,6 @@ export class VoterList implements OnInit {
         const usableHeight = pageHeight - margin * 2 - footerHeight;
         const chartY = margin + (usableHeight - finalHeight) / 2;
 
-        const chartImgData = chartCanvas.toDataURL('image/png');
         pdf.addImage(
           chartImgData,
           'PNG',
